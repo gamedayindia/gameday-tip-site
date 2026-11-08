@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: gameday-tip-site
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: SE_CHANNEL_ID
+        sync: false
+      - key: SE_JWT_TOKEN
+        sync: false
+      - key: STREAMLABS_ACCESS_TOKEN
+        sync: false
+      - key: STREAMER_NAME
+        value: GameDay
+      - key: PORT
+        value: 3000
