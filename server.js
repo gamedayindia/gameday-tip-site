@@ -57,7 +57,7 @@ const LOGO_DATA_URI = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAA
 const html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8')
   .replace('__RAZORPAY_KEY__',  RAZORPAY_KEY_ID   || '')
   .replace('__STREAMER_NAME__', STREAMER_NAME)
-  .replace('__STREAMER_LOGO__', LOGO_DATA_URI);
+  .replace('__STREAMER_LOGO__', () => LOGO_DATA_URI);
 
 app.get('/', (_req, res) => {
   res.setHeader('Content-Type', 'text/html');
@@ -192,6 +192,31 @@ app.post('/webhook/razorpay', async (req, res) => {
   ]);
 
   res.status(200).send('OK');
+});
+
+
+// ─── Latest YouTube videos (RSS feed, no API key needed) ──────────────────
+app.get('/api/latest-videos', async (req, res) => {
+  const CHANNEL_ID = 'UCu5LMkQhZdVlfNnoBso-nfg';
+  try {
+    const response = await axios.get(
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`,
+      { timeout: 6000 }
+    );
+    const xml = response.data;
+    const videoIds = [...xml.matchAll(/<yt:videoId>(.*?)<\/yt:videoId>/g)].map(m => m[1]);
+    const allTitles = [...xml.matchAll(/<title>(.*?)<\/title>/gs)].map(m => m[1].trim());
+    const titles = allTitles.slice(1); // skip channel title
+    const videos = videoIds.slice(0, 5).map((id, i) => ({
+      id,
+      title: titles[i] || 'Video',
+      thumbnail: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
+    }));
+    res.json({ videos });
+  } catch (err) {
+    console.error('RSS fetch error:', err.message);
+    res.json({ videos: [] });
+  }
 });
 
 // ─── Start ─────────────────────────────────────────────────────────────────

@@ -440,7 +440,7 @@
         </button>
       </div>
       <div class="player-screen">
-        <!-- YouTube live stream embed (channel ID: UCu5LMkQhZdVlfNnoBso-nfg) -->
+        <!-- YouTube live stream -->
         <iframe
           id="ytFrame"
           src="https://www.youtube.com/embed/live_stream?channel=UCu5LMkQhZdVlfNnoBso-nfg&autoplay=0&rel=0"
@@ -461,10 +461,10 @@
     <div id="formView">
       <div class="section-label">Choose amount</div>
       <div class="amounts" id="chipGroup">
-        <button class="chip" data-amount="49">₹49<span class="sub">small</span></button>
-        <button class="chip selected" data-amount="99">₹99<span class="sub">nice</span></button>
-        <button class="chip" data-amount="199">₹199<span class="sub">big</span></button>
-        <button class="chip" data-amount="499">₹499<span class="sub">legend</span></button>
+        <button class="chip selected" data-amount="50">₹50<span class="sub">small</span></button>
+        <button class="chip" data-amount="100">₹100<span class="sub">nice</span></button>
+        <button class="chip" data-amount="500">₹500<span class="sub">big</span></button>
+        <button class="chip" data-amount="5000">₹5000<span class="sub">legend</span></button>
       </div>
 
       <div class="custom-wrap">
@@ -528,7 +528,6 @@
       twFrame.style.display = '';
       tabTw.classList.add('active');
       tabYt.classList.remove('active');
-      // Set Twitch src with correct parent domain on first switch
       if (!twFrame.src || twFrame.src === 'about:blank') {
         const parent = window.location.hostname || 'localhost';
         twFrame.src = `https://player.twitch.tv/?channel=gamedayislive&parent=${parent}&autoplay=false`;
@@ -543,7 +542,7 @@
   document.getElementById('streamerNameEl').textContent = streamerName;
 
   // ─── Amount logic ─────────────────────────────────────────────────────────
-  let selectedAmount = 99;
+  let selectedAmount = 50;
 
   function updatePreview(amount) {
     selectedAmount = amount;
