@@ -411,7 +411,7 @@
 
     <!-- Streamer header -->
     <div class="streamer-header">
-      <img class="logo-img" src="__STREAMER_LOGO__" alt="GameDay" />
+      <img class="logo-img" src="/logo.jpg" alt="GameDay" />
       <div class="streamer-name" id="streamerNameEl">GameDay</div>
       <div class="streamer-sub">Tip — your message shows on stream</div>
       <div class="socials">
@@ -507,7 +507,7 @@
   // ─── Config (injected from server) ───────────────────────────────────────
   const CONFIG = {
     razorpayKey: '__RAZORPAY_KEY__',    // replaced at serve time OR set directly
-    streamerName: '__STREAMER_NAME__',
+    streamerName: 'GameDay',
     currency: 'INR'
   };
 
@@ -536,8 +536,7 @@
   }
 
   // ─── Init ─────────────────────────────────────────────────────────────────
-  const streamerName = CONFIG.streamerName !== '__STREAMER_NAME__'
-    ? CONFIG.streamerName : 'Your Streamer';
+  const streamerName = CONFIG.streamerName || 'GameDay';
 
   document.getElementById('streamerNameEl').textContent = streamerName;
 
