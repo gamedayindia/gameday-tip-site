@@ -192,6 +192,22 @@ app.post('/webhook/razorpay', async (req, res) => {
 });
 
 
+// ─── GET /api/banners — list images in public/banners/ ────────────────────
+// Drop .jpg/.png/.gif/.webp files into public/banners/ to show them in the
+// top carousel automatically. No restart needed; files are read on each request.
+app.get('/api/banners', (_req, res) => {
+  const bannersDir = path.join(__dirname, 'public', 'banners');
+  try {
+    const files = fs.readdirSync(bannersDir)
+      .filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f))
+      .sort()
+      .map(f => `/banners/${f}`);
+    res.json({ banners: files });
+  } catch {
+    res.json({ banners: [] });
+  }
+});
+
 // ─── Latest YouTube videos (RSS feed, no API key needed) ──────────────────
 app.get('/api/latest-videos', async (req, res) => {
   const CHANNEL_ID = 'UCu5LMkQhZdVlfNnoBso-nfg';
