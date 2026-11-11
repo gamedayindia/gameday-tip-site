@@ -7,8 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-<script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 <style>
 /* ═══════════════════════════════════════════
    TOKENS
@@ -35,7 +33,7 @@
    RESET & BASE
 ═══════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;font-size:16px}
+html{scroll-behavior:smooth}
 body{
   font-family:'Inter',sans-serif;
   background:var(--bg);
@@ -52,22 +50,14 @@ input,textarea{font-family:inherit}
    AD BANNER CAROUSEL
 ═══════════════════════════════════════════ */
 #bannerWrap{
-  position:relative;
-  width:100%;
-  overflow:hidden;
-  background:#000;
-  display:none;        /* JS shows when images load */
+  position:relative;width:100%;overflow:hidden;
+  background:#000;display:none;
 }
-.banner-track{
-  display:flex;
-  transition:transform .55s cubic-bezier(.4,0,.2,1);
-}
+.banner-track{display:flex;transition:transform .55s cubic-bezier(.4,0,.2,1)}
 .banner-slide{
-  flex-shrink:0;
-  width:100%;
+  flex-shrink:0;width:100%;
   height:clamp(140px,22vw,240px);
-  overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
 }
 .banner-slide img{width:100%;height:100%;object-fit:cover}
 .banner-btn{
@@ -103,14 +93,12 @@ input,textarea{font-family:inherit}
   padding:0 clamp(16px,4vw,40px);
   background:rgba(5,7,14,.88);
   backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
 }
 .nav-brand{
   font-family:'Space Grotesk',sans-serif;
-  font-size:18px;font-weight:800;
-  letter-spacing:-.03em;color:var(--text);
-  display:flex;align-items:center;gap:3px;
+  font-size:18px;font-weight:800;letter-spacing:-.03em;
+  color:var(--text);display:flex;align-items:center;gap:3px;
 }
 .nav-brand .r{color:var(--red)}
 .nav-icons{display:flex;gap:6px}
@@ -124,10 +112,8 @@ input,textarea{font-family:inherit}
 .nav-icon svg{width:15px;height:15px;fill:currentColor}
 .nav-cta{
   padding:8px 18px;
-  background:var(--red);color:#fff;
-  border:none;border-radius:9px;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:13px;font-weight:700;
+  background:var(--red);color:#fff;border:none;border-radius:9px;
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;
   letter-spacing:.02em;
   transition:filter .15s,transform .12s;
   box-shadow:0 2px 14px var(--red-glow);
@@ -138,85 +124,64 @@ input,textarea{font-family:inherit}
    HERO
 ═══════════════════════════════════════════ */
 .hero{
-  position:relative;
-  min-height:100svh;
+  position:relative;min-height:100svh;
   display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
-  padding:80px clamp(16px,5vw,60px);
+  overflow:hidden;padding:80px clamp(16px,5vw,60px);
 }
-/* Layered gradient bg */
 .hero-bg{
   position:absolute;inset:0;
   background:
-    radial-gradient(ellipse 70% 60% at 50% -10%, rgba(255,26,46,.18) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(0,200,255,.08) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 70% at 10% 70%, rgba(255,26,46,.06) 0%, transparent 55%),
-    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    radial-gradient(ellipse 70% 60% at 50% -10%,rgba(255,26,46,.18) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 50% at 85% 80%,rgba(0,200,255,.08) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 70% at 10% 70%,rgba(255,26,46,.06) 0%,transparent 55%),
+    linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
   z-index:0;
 }
-/* Tech grid overlay */
 .hero-grid{
   position:absolute;inset:0;z-index:1;
   background-image:
-    linear-gradient(rgba(0,200,255,.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,200,255,.03) 1px, transparent 1px);
+    linear-gradient(rgba(0,200,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,200,255,.03) 1px,transparent 1px);
   background-size:52px 52px;
-  mask-image:radial-gradient(ellipse 100% 100% at 50% 50%, #000 10%, transparent 75%);
-  -webkit-mask-image:radial-gradient(ellipse 100% 100% at 50% 50%, #000 10%, transparent 75%);
+  mask-image:radial-gradient(ellipse 100% 100% at 50% 50%,#000 10%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse 100% 100% at 50% 50%,#000 10%,transparent 75%);
 }
-/* Scan-line decoration */
 .hero-scanline{
-  position:absolute;top:0;left:0;right:0;
-  height:2px;
-  background:linear-gradient(90deg, transparent, var(--cyan), transparent);
-  animation:scanDown 6s ease-in-out infinite;
-  z-index:2;opacity:.4;
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  animation:scanDown 6s ease-in-out infinite;z-index:2;opacity:.4;
 }
 @keyframes scanDown{0%{top:-2px}100%{top:100%}}
 .hero-content{
   position:relative;z-index:3;
-  display:flex;flex-direction:column;
-  align-items:center;text-align:center;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
   gap:22px;
 }
-/* Avatar */
 .avatar-wrap{position:relative;width:140px;height:140px}
 .avatar-ring{
   position:absolute;inset:-5px;border-radius:50%;
-  background:conic-gradient(from 0deg at 50% 50%, var(--red) 0%, transparent 40%, var(--cyan) 60%, transparent 80%, var(--red) 100%);
+  background:conic-gradient(from 0deg at 50% 50%,var(--red) 0%,transparent 40%,var(--cyan) 60%,transparent 80%,var(--red) 100%);
   animation:spinRing 5s linear infinite;
 }
 @keyframes spinRing{to{transform:rotate(360deg)}}
-.avatar-bg{
-  position:absolute;inset:2px;border-radius:50%;
-  background:var(--bg);
-}
+.avatar-bg{position:absolute;inset:2px;border-radius:50%;background:var(--bg)}
 .avatar-img{
   position:absolute;inset:5px;border-radius:50%;
   object-fit:cover;width:calc(100% - 10px);height:calc(100% - 10px);
   box-shadow:0 0 50px var(--red-glow),0 0 100px rgba(255,26,46,.12);
 }
-/* Name */
 .hero-name{
   font-family:'Space Grotesk',sans-serif;
-  font-size:clamp(52px,10vw,88px);
-  font-weight:800;letter-spacing:-.04em;line-height:1;
-  color:var(--text);
-  text-shadow:0 0 80px rgba(255,26,46,.25);
+  font-size:clamp(52px,10vw,88px);font-weight:800;letter-spacing:-.04em;line-height:1;
+  color:var(--text);text-shadow:0 0 80px rgba(255,26,46,.25);
 }
 .hero-name .r{color:var(--red)}
-.hero-tagline{
-  font-size:12px;font-weight:600;
-  letter-spacing:.18em;text-transform:uppercase;
-  color:var(--cyan);
-}
-/* Social icons */
+.hero-tagline{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan)}
 .hero-socials{display:flex;gap:10px}
 .h-soc{
   width:46px;height:46px;border-radius:13px;
   display:flex;align-items:center;justify-content:center;
-  color:var(--muted);border:1px solid var(--border);
-  background:var(--bg2);
+  color:var(--muted);border:1px solid var(--border);background:var(--bg2);
   transition:all .18s;
 }
 .h-soc:hover{transform:translateY(-4px);border-color:var(--border2)}
@@ -224,44 +189,34 @@ input,textarea{font-family:inherit}
 .h-soc.tw:hover{color:#9146FF;border-color:rgba(145,70,255,.5);background:rgba(145,70,255,.08);box-shadow:0 8px 24px rgba(145,70,255,.2)}
 .h-soc.ig:hover{color:#E1306C;border-color:rgba(225,48,108,.5);background:rgba(225,48,108,.08);box-shadow:0 8px 24px rgba(225,48,108,.2)}
 .h-soc svg{width:19px;height:19px;fill:currentColor}
-/* CTA button */
 .hero-cta{
   display:inline-flex;align-items:center;gap:10px;
   padding:14px 32px;
-  background:var(--red);color:#fff;
-  border-radius:12px;border:none;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:15px;font-weight:700;letter-spacing:.02em;
+  background:var(--red);color:#fff;border-radius:12px;border:none;
+  font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.02em;
   box-shadow:0 4px 32px var(--red-glow);
   transition:filter .15s,transform .15s,box-shadow .15s;
 }
 .hero-cta:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 10px 44px var(--red-glow)}
 .hero-cta svg{width:18px;height:18px;fill:currentColor}
-/* Live badge */
 .live-pill{
   display:inline-flex;align-items:center;gap:7px;
   padding:5px 14px;
-  background:rgba(255,26,46,.1);
-  border:1px solid rgba(255,26,46,.3);
-  border-radius:100px;
-  font-size:11px;font-weight:700;letter-spacing:.1em;
+  background:rgba(255,26,46,.1);border:1px solid rgba(255,26,46,.3);
+  border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--red);
 }
 .live-dot{
   width:7px;height:7px;border-radius:50%;
-  background:var(--red);
-  box-shadow:0 0 8px var(--red);
+  background:var(--red);box-shadow:0 0 8px var(--red);
   animation:throb 1.6s ease-in-out infinite;
 }
 @keyframes throb{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-
-/* Scroll indicator */
 .scroll-hint{
   position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
   display:flex;flex-direction:column;align-items:center;gap:5px;
-  color:var(--muted);font-size:11px;letter-spacing:.08em;
-  text-transform:uppercase;animation:floatHint 2s ease-in-out infinite;
-  z-index:3;
+  color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  animation:floatHint 2s ease-in-out infinite;z-index:3;
 }
 @keyframes floatHint{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
 .scroll-hint svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
@@ -271,67 +226,41 @@ input,textarea{font-family:inherit}
 ═══════════════════════════════════════════ */
 .sec{padding:clamp(60px,8vw,100px) clamp(16px,5vw,60px)}
 .sec-head{text-align:center;margin-bottom:48px}
-.eyebrow{
-  display:inline-block;
-  font-size:11px;font-weight:700;letter-spacing:.15em;
-  text-transform:uppercase;color:var(--cyan);
-  margin-bottom:12px;
-}
-.sec-title{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:clamp(28px,5vw,48px);font-weight:800;
-  letter-spacing:-.03em;color:var(--text);
-}
+.eyebrow{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--cyan);margin-bottom:12px}
+.sec-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:800;letter-spacing:-.03em;color:var(--text)}
 .sec-title .r{color:var(--red)}
 
 /* ═══════════════════════════════════════════
    STREAM SECTION
 ═══════════════════════════════════════════ */
-.stream-sec{
-  background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
-}
+.stream-sec{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
 .player-shell{
-  max-width:860px;margin:0 auto;
-  border-radius:18px;overflow:hidden;
+  max-width:860px;margin:0 auto;border-radius:18px;overflow:hidden;
   border:1px solid var(--border2);
   box-shadow:0 0 80px rgba(0,200,255,.05),0 30px 80px rgba(0,0,0,.5);
 }
-/* Tabs */
-.ptabs{
-  display:flex;background:var(--surface);
-  border-bottom:1px solid var(--border);
-}
+.ptabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
 .ptab{
   flex:1;padding:13px 0;
   display:flex;align-items:center;justify-content:center;gap:7px;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:13px;font-weight:700;letter-spacing:.03em;
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;letter-spacing:.03em;
   color:var(--muted);background:none;border:none;
-  transition:color .13s,background .13s;
-  position:relative;
+  transition:color .13s,background .13s;position:relative;
 }
 .ptab svg{width:15px;height:15px;fill:currentColor}
-.ptab::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
-  background:currentColor;transform:scaleX(0);transition:transform .2s;
-}
+.ptab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:currentColor;transform:scaleX(0);transition:transform .2s}
 .ptab.on{color:var(--text);background:var(--bg2)}
 .ptab.on::after{transform:scaleX(1)}
 .ptab.yt.on{color:#FF4444}
 .ptab.tw.on{color:#9146FF}
-.pscreen{
-  position:relative;width:100%;aspect-ratio:16/9;background:#000;
-}
-.pscreen iframe{
-  position:absolute;inset:0;width:100%;height:100%;border:none;display:block;
-}
+.pscreen{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+.pscreen iframe{position:absolute;inset:0;width:100%;height:100%;border:none;display:block}
 
 /* ═══════════════════════════════════════════
    TIP SECTION
 ═══════════════════════════════════════════ */
 .tip-sec{
-  background:var(--bg2);
-  position:relative;overflow:hidden;
+  background:var(--bg2);position:relative;overflow:hidden;
 }
 .tip-sec::before{
   content:'';
@@ -340,25 +269,17 @@ input,textarea{font-family:inherit}
   background:radial-gradient(ellipse at center,rgba(255,26,46,.07) 0%,transparent 65%);
   pointer-events:none;
 }
-/* Decorative corner circuits */
 .tip-sec::after{
-  content:'';
-  position:absolute;top:0;right:0;
-  width:300px;height:300px;
-  background:
-    radial-gradient(circle at 100% 0%,rgba(0,200,255,.05) 0%,transparent 60%);
+  content:'';position:absolute;top:0;right:0;width:300px;height:300px;
+  background:radial-gradient(circle at 100% 0%,rgba(0,200,255,.05) 0%,transparent 60%);
   pointer-events:none;
 }
 .tip-card{
-  max-width:560px;margin:0 auto;
-  background:var(--bg3);
-  border:1px solid var(--border2);
-  border-radius:22px;
-  padding:clamp(28px,5vw,44px);
-  position:relative;
+  max-width:600px;margin:0 auto;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:22px;
+  padding:clamp(28px,5vw,44px);position:relative;
   box-shadow:0 24px 80px rgba(0,0,0,.55);
 }
-/* Glowing border on hover */
 .tip-card::before{
   content:'';position:absolute;inset:-1px;border-radius:22px;
   background:linear-gradient(135deg,rgba(255,26,46,.25) 0%,transparent 45%,rgba(0,200,255,.12) 100%);
@@ -366,24 +287,90 @@ input,textarea{font-family:inherit}
 }
 .tip-card:hover::before{opacity:1}
 
-/* Row label */
-.row-label{
-  font-size:11px;font-weight:600;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--muted);
-  margin-bottom:9px;
+/* ── QR Block ───────────────────────────────── */
+.qr-block{
+  display:flex;flex-direction:column;align-items:center;
+  gap:0;margin-bottom:28px;
 }
-/* Chips */
-.chips{
-  display:grid;grid-template-columns:repeat(4,1fr);
-  gap:8px;margin-bottom:18px;
+/* QR outer glow ring (animated) */
+.qr-glow-ring{
+  position:relative;
+  padding:3px;
+  border-radius:24px;
+  background:conic-gradient(from 0deg,var(--red),var(--cyan),var(--red));
+  animation:spinRingQR 4s linear infinite;
+  box-shadow:0 0 50px rgba(255,26,46,.35),0 0 100px rgba(0,200,255,.12);
 }
+@keyframes spinRingQR{to{filter:hue-rotate(360deg)}}
+.qr-frame{
+  position:relative;
+  padding:16px;
+  background:#fff;
+  border-radius:22px;
+}
+/* Corner accent lines (over white background) */
+.qr-frame::before,.qr-frame::after{
+  content:'';position:absolute;
+  width:28px;height:28px;
+  border-color:var(--red);border-style:solid;
+  z-index:1;
+}
+.qr-frame::before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.qr-frame::after {bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.qr-img{
+  width:clamp(220px,60vw,280px);
+  height:clamp(220px,60vw,280px);
+  display:block;border-radius:8px;
+  image-rendering:crisp-edges;
+}
+/* Amount float badge */
+.qr-amt-float{
+  position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  display:inline-flex;align-items:center;
+  padding:5px 20px;
+  background:linear-gradient(135deg,#cc0f20,var(--red));
+  border-radius:100px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:16px;font-weight:800;color:#fff;letter-spacing:-.01em;
+  box-shadow:0 4px 20px var(--red-glow);white-space:nowrap;
+  transition:all .2s;
+}
+.qr-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:28px;
+  padding:7px 16px;
+  background:linear-gradient(135deg,rgba(255,26,46,.1),rgba(0,200,255,.06));
+  border:1px solid var(--border2);border-radius:100px;
+  font-size:12px;font-weight:600;color:var(--text2);letter-spacing:.03em;
+}
+.qr-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:throb 1.6s ease-in-out infinite}
+.qr-apps{
+  display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;justify-content:center;
+}
+.qr-app{
+  font-size:11px;font-weight:600;padding:4px 12px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:100px;
+  color:var(--muted);letter-spacing:.02em;
+}
+.qr-divider{
+  width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--border2),transparent);
+  margin:28px 0 20px;position:relative;
+}
+.qr-divider span{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--bg3);padding:0 14px;
+  font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+}
+
+/* ── Amount chips ───────────────────────────── */
+.row-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
 .chip{
   padding:11px 6px;
-  background:var(--surface);
-  border:1.5px solid var(--border2);border-radius:11px;
+  background:var(--surface);border:1.5px solid var(--border2);border-radius:11px;
   color:var(--text2);
-  font-family:'Space Grotesk',sans-serif;
-  font-size:14px;font-weight:700;
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;
   text-align:center;line-height:1.1;
   transition:border-color .13s,background .13s,color .13s;
 }
@@ -392,77 +379,51 @@ input,textarea{font-family:inherit}
 .chip.on{border-color:transparent;color:#fff}
 .chip.on .sub{color:rgba(255,255,255,.6)}
 .chip.g.on {background:linear-gradient(135deg,#06521f,#0a7d2e)}
-.chip.y.on {background:linear-gradient(135deg,#4d3906,#7a5e0a)}
 .chip.p.on {background:linear-gradient(135deg,#2a0952,#4a1480)}
 .chip.rx.on{background:linear-gradient(135deg,#520615,#881020)}
-/* Fields */
+
+/* ── Fields ────────────────────────────────── */
 .fld{margin-bottom:14px}
-.fld label{
-  display:block;font-size:11px;font-weight:600;
-  letter-spacing:.06em;text-transform:uppercase;
-  color:var(--muted);margin-bottom:6px;
-}
+.fld label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .fld label .note{text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)}
-.inp-wrap{position:relative}
-.inp-pre{
-  position:absolute;left:12px;top:50%;transform:translateY(-50%);
-  color:var(--muted);font-size:14px;pointer-events:none;
-}
 .fld input,.fld textarea{
-  width:100%;
-  background:var(--surface);
-  border:1.5px solid var(--border2);
-  border-radius:11px;
-  padding:11px 14px;
-  color:var(--text);font-size:14px;
-  outline:none;
-  transition:border-color .15s,box-shadow .15s;
-  resize:none;
+  width:100%;background:var(--surface);border:1.5px solid var(--border2);border-radius:11px;
+  padding:11px 14px;color:var(--text);font-size:14px;outline:none;
+  transition:border-color .15s,box-shadow .15s;resize:none;
 }
-.fld input.pl{padding-left:28px}
 .fld input::placeholder,.fld textarea::placeholder{color:var(--muted)}
-.fld input:focus,.fld textarea:focus{
-  border-color:var(--red);
-  box-shadow:0 0 0 3px var(--red-dim);
-}
-/* Pay button */
+.fld input:focus,.fld textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
+
+/* ── Pay button ────────────────────────────── */
 .pay-btn{
-  width:100%;margin-top:20px;
-  padding:15px;
-  background:var(--red);color:#fff;border:none;
-  border-radius:13px;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:15px;font-weight:700;letter-spacing:.02em;
-  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;margin-top:20px;padding:15px;
+  background:linear-gradient(135deg,#cc0f20,var(--red));
+  color:#fff;border:none;border-radius:13px;
+  font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.02em;
+  display:flex;align-items:center;justify-content:center;gap:10px;
   box-shadow:0 4px 24px var(--red-glow);
   transition:filter .15s,transform .12s,box-shadow .15s;
 }
 .pay-btn:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 10px 36px var(--red-glow)}
 .pay-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
-.pay-btn .dim{opacity:.7;font-weight:500;font-size:14px}
+.pay-btn svg{width:18px;height:18px;fill:currentColor;flex-shrink:0}
+.pay-btn .dim{opacity:.7;font-weight:500;font-size:13px}
 .err{color:#FF6868;font-size:12px;min-height:14px;margin-top:6px}
-.secure-note{
-  text-align:center;margin-top:14px;
-  font-size:11.5px;color:var(--muted);
+.note-row{
+  text-align:center;margin-top:12px;font-size:12px;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:5px;
 }
-.secure-note strong{color:var(--text2);font-weight:500}
-/* Success */
+.note-row svg{width:12px;height:12px;fill:var(--muted);flex-shrink:0}
+
+/* ── Success ───────────────────────────────── */
 .success{text-align:center;padding:24px 0}
 .sico{font-size:52px;margin-bottom:16px;animation:popIn .45s cubic-bezier(.34,1.56,.64,1)}
 @keyframes popIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
-.stitle{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:26px;font-weight:800;color:var(--text);margin-bottom:8px;
-}
+.stitle{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:800;color:var(--text);margin-bottom:8px}
 .ssub{font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.6}
 .again{
-  padding:10px 26px;
-  background:var(--surface);
-  border:1.5px solid var(--border2);
-  border-radius:10px;
-  color:var(--text);
-  font-family:'Space Grotesk',sans-serif;
-  font-size:13px;font-weight:600;
+  padding:10px 26px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;
+  color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;
   transition:border-color .13s;
 }
 .again:hover{border-color:var(--red)}
@@ -471,10 +432,8 @@ input,textarea{font-family:inherit}
    FOOTER
 ═══════════════════════════════════════════ */
 footer{
-  padding:28px clamp(16px,4vw,40px);
-  text-align:center;
-  border-top:1px solid var(--border);
-  background:var(--bg);
+  padding:28px clamp(16px,4vw,40px);text-align:center;
+  border-top:1px solid var(--border);background:var(--bg);
   font-size:12px;color:var(--muted);
   display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;
 }
@@ -488,6 +447,7 @@ footer strong{color:var(--text2);font-weight:500}
   .nav-icons{display:none}
   .chips{grid-template-columns:repeat(2,1fr)}
   .hero-name{font-size:52px}
+  .qr-img{width:170px;height:170px}
 }
 @media(prefers-reduced-motion:reduce){
   .avatar-ring,.live-dot,.hero-scanline,.scroll-hint{animation:none}
@@ -499,8 +459,7 @@ footer strong{color:var(--text2);font-weight:500}
 
 <!-- ══════════════════════════════════════
      AD BANNER CAROUSEL
-     Drop images into /public/banners/ folder
-     to show them here automatically.
+     Drop images into /public/banners/
 ══════════════════════════════════════ -->
 <div id="bannerWrap">
   <div id="bannerTrack" class="banner-track"></div>
@@ -535,23 +494,15 @@ footer strong{color:var(--text2);font-weight:500}
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
   <div class="hero-scanline"></div>
-
   <div class="hero-content">
-    <div class="live-pill">
-      <span class="live-dot"></span>
-      Hindi Gaming Streamer
-    </div>
-
+    <div class="live-pill"><span class="live-dot"></span>Hindi Gaming Streamer</div>
     <div class="avatar-wrap">
       <div class="avatar-ring"></div>
       <div class="avatar-bg"></div>
       <img class="avatar-img" src="/logo.jpg" alt="GameDay" />
     </div>
-
     <h1 class="hero-name">GAME<span class="r">DAY</span></h1>
-
     <p class="hero-tagline">Support the stream — your message goes live</p>
-
     <div class="hero-socials">
       <a class="h-soc yt" href="https://www.youtube.com/@GAMEDAYHINDIGAMING" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
@@ -563,13 +514,11 @@ footer strong{color:var(--text2);font-weight:500}
         <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
       </a>
     </div>
-
     <a class="hero-cta" href="#tip">
       <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
       Send a Tip
     </a>
   </div>
-
   <div class="scroll-hint" aria-hidden="true">
     <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
   </div>
@@ -599,9 +548,7 @@ footer strong{color:var(--text2);font-weight:500}
         src="https://www.youtube.com/embed/live_stream?channel=UCu5LMkQhZdVlfNnoBso-nfg&autoplay=0&rel=0"
         allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"
         allowfullscreen></iframe>
-      <iframe id="twFrame" style="display:none"
-        allow="autoplay;fullscreen"
-        allowfullscreen></iframe>
+      <iframe id="twFrame" style="display:none" allow="autoplay;fullscreen" allowfullscreen></iframe>
     </div>
   </div>
 </section>
@@ -613,51 +560,78 @@ footer strong{color:var(--text2);font-weight:500}
   <div class="sec-head">
     <span class="eyebrow">💸 Support</span>
     <h2 class="sec-title">Send a <span class="r">Tip</span></h2>
-    <p style="color:var(--text2);font-size:14px;margin-top:10px">Your message fires as an alert on stream — everyone sees it</p>
+    <p style="color:var(--text2);font-size:14px;margin-top:10px">Scan → Pay → your message fires as an alert on stream</p>
   </div>
 
   <div class="tip-card">
+
     <!-- FORM VIEW -->
     <div id="formView">
-      <div class="row-label">Choose amount</div>
+
+      <!-- QR CODE -->
+      <div class="qr-block">
+        <div class="qr-glow-ring">
+          <div class="qr-frame">
+            <img class="qr-img" src="/qr.jpg" alt="Scan to pay via UPI" />
+            <div class="qr-amt-float" id="qrAmtFloat">₹50</div>
+          </div>
+        </div>
+        <div class="qr-badge">
+          <span class="dot"></span>
+          Scan with any UPI app
+        </div>
+        <div class="qr-apps">
+          <span class="qr-app">📱 Google Pay</span>
+          <span class="qr-app">💜 PhonePe</span>
+          <span class="qr-app">🔵 Paytm</span>
+          <span class="qr-app">🇮🇳 BHIM</span>
+        </div>
+      </div>
+
+      <div class="qr-divider"><span>Then fill this in</span></div>
+
+      <!-- AMOUNT CHIPS (reference) -->
+      <div class="row-label">How much did you send?</div>
       <div class="chips" id="chipGroup">
         <button class="chip g on" data-amount="50">₹50<span class="sub">small</span></button>
         <button class="chip g"   data-amount="100">₹100<span class="sub">nice</span></button>
         <button class="chip p"   data-amount="500">₹500<span class="sub">big</span></button>
         <button class="chip rx"  data-amount="5000">₹5000<span class="sub">legend</span></button>
       </div>
-
       <div class="fld">
-        <div class="inp-wrap">
-          <span class="inp-pre">₹</span>
-          <input class="pl" type="number" id="customAmt" placeholder="Custom amount" min="1" max="500000" />
-        </div>
+        <input type="number" id="customAmt" placeholder="Other amount" min="1" max="500000" />
       </div>
 
+      <!-- NAME + MESSAGE -->
       <div class="fld">
         <label for="donorName">Your name</label>
         <input type="text" id="donorName" placeholder="Anonymous" maxlength="50" />
       </div>
-
       <div class="fld">
         <label for="donorMsg">Message <span class="note">(shown on stream)</span></label>
-        <textarea id="donorMsg" placeholder="Say something nice..." maxlength="200" rows="3"></textarea>
+        <textarea id="donorMsg" placeholder="Say something awesome..." maxlength="200" rows="3"></textarea>
       </div>
 
       <p class="err" id="errMsg"></p>
 
+      <!-- SUBMIT BUTTON -->
       <button class="pay-btn" id="payBtn">
-        Pay via UPI &nbsp;<span class="dim" id="amtPrev">₹50</span>
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        I've Paid — Fire the Alert!
+        <span class="dim" id="amtPrev">₹50</span>
       </button>
 
-      <p class="secure-note">Secured by <strong>Razorpay</strong> · UPI, cards &amp; wallets accepted</p>
+      <div class="note-row">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        Pay on UPI first, then submit — your alert fires instantly
+      </div>
     </div>
 
     <!-- SUCCESS VIEW -->
     <div class="success" id="successView" hidden>
       <div class="sico">🎉</div>
-      <div class="stitle">Tip Sent!</div>
-      <p class="ssub">Your alert is firing on stream right now.<br>Thanks, <strong id="sName">friend</strong>!</p>
+      <div class="stitle">Alert Fired!</div>
+      <p class="ssub">Your message is live on stream right now.<br>Thanks, <strong id="sName">friend</strong>! You're legendary.</p>
       <button class="again" id="againBtn">Send another tip</button>
     </div>
   </div>
@@ -667,61 +641,40 @@ footer strong{color:var(--text2);font-weight:500}
      FOOTER
 ══════════════════════════════════════ -->
 <footer>
-  Secured by <strong>Razorpay</strong>
+  Pay via <strong>UPI</strong>
   <span class="f-sep">·</span>
-  UPI, cards &amp; wallets accepted
+  Google Pay · PhonePe · Paytm · BHIM
   <span class="f-sep">·</span>
   © 2024 GameDay
 </footer>
 
 <script>
-/* ── Config ─────────────────────────────────────────────── */
-const CONFIG = {
-  razorpayKey: '__RAZORPAY_KEY__',
-  streamerName: 'GameDay',
-  currency: 'INR'
-};
-
-/* ── Banner Carousel ──────────────────────────────────────
-   Add image files to  /public/banners/  to show them here.
-   Supported: .jpg .jpeg .png .gif .webp
-
-   AdSense: replace the banner-wrap div with your AdSense
-   <ins class="adsbygoogle"> snippet in this HTML file.
-──────────────────────────────────────────────────────── */
+/* ── Banner Carousel ───────────────────────────────────── */
 (async function initBanner() {
   try {
     const r = await fetch('/api/banners');
     const { banners } = await r.json();
     if (!banners || !banners.length) return;
-
     const wrap  = document.getElementById('bannerWrap');
     const track = document.getElementById('bannerTrack');
     const dots  = document.getElementById('bannerDots');
-
     track.innerHTML = banners.map(src =>
       `<div class="banner-slide"><img src="${src}" alt="Banner" loading="lazy" /></div>`
     ).join('');
-
     dots.innerHTML = banners.map((_, i) =>
       `<div class="bdot${i===0?' on':''}" onclick="goSlide(${i})"></div>`
     ).join('');
-
     wrap.style.display = 'block';
-
     let cur = 0, timer;
     const total = banners.length;
-
     function goSlide(n) {
       cur = ((n % total) + total) % total;
       track.style.transform = `translateX(-${cur * 100}%)`;
       document.querySelectorAll('.bdot').forEach((d,i) => d.classList.toggle('on', i===cur));
     }
     window.goSlide = goSlide;
-
     function startTimer() { timer = setInterval(() => goSlide(cur + 1), 5000); }
     function stopTimer()  { clearInterval(timer); }
-
     if (total > 1) {
       startTimer();
       document.getElementById('bannerPrev').addEventListener('click', () => { stopTimer(); goSlide(cur - 1); startTimer(); });
@@ -733,7 +686,7 @@ const CONFIG = {
   } catch(_) {}
 })();
 
-/* ── Tab switcher ─────────────────────────────────────── */
+/* ── Tab switcher ──────────────────────────────────────── */
 function switchTab(tab) {
   const yt = document.getElementById('ytFrame');
   const tw = document.getElementById('twFrame');
@@ -750,24 +703,15 @@ function switchTab(tab) {
   }
 }
 
-/* ── Amount chips ─────────────────────────────────────── */
+/* ── Amount chips ──────────────────────────────────────── */
 let selectedAmount = 50;
 
 function setAmt(v) {
   selectedAmount = v;
-  document.getElementById('amtPrev').textContent = '₹' + v.toLocaleString('en-IN');
+  const fmt = '₹' + v.toLocaleString('en-IN');
+  document.getElementById('amtPrev').textContent = fmt;
+  document.getElementById('qrAmtFloat').textContent = fmt;
   document.getElementById('errMsg').textContent = '';
-  applyTier(v);
-}
-
-function applyTier(v) {
-  const btn = document.getElementById('payBtn');
-  btn.style.background =
-    v >= 5001 ? '#B01020' :
-    v >= 501  ? '#FF1A2E' :
-    v >= 301  ? '#6B2FCC' :
-    v >= 101  ? '#1A8A36' :
-                '#1A8A36';
 }
 
 document.getElementById('chipGroup').addEventListener('click', e => {
@@ -787,59 +731,37 @@ document.getElementById('customAmt').addEventListener('input', e => {
   }
 });
 
-/* ── Payment ──────────────────────────────────────────── */
+/* ── Submit (fire alert) ───────────────────────────────── */
 document.getElementById('payBtn').addEventListener('click', async () => {
   const amount  = selectedAmount;
   const name    = (document.getElementById('donorName').value.trim() || 'Anonymous').substring(0, 50);
   const message = document.getElementById('donorMsg').value.trim().substring(0, 200);
   const errEl   = document.getElementById('errMsg');
 
-  if (!amount || amount < 1) { errEl.textContent = 'Please enter a valid amount.'; return; }
+  if (!amount || amount < 1) { errEl.textContent = 'Please select or enter an amount.'; return; }
 
   const btn = document.getElementById('payBtn');
   btn.disabled = true;
-  btn.innerHTML = 'Opening payment…';
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;animation:spin .8s linear infinite"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg> Sending alert…`;
 
   try {
-    const res   = await fetch('/create-order', {
+    const res = await fetch('/confirm-tip', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount, name, message })
     });
-    if (!res.ok) throw new Error('Could not create order. Try again.');
-    const order = await res.json();
-
-    const rzp = new Razorpay({
-      key:         CONFIG.razorpayKey !== '__RAZORPAY_KEY__' ? CONFIG.razorpayKey : order.key,
-      order_id:    order.id,
-      amount:      order.amount,
-      currency:    CONFIG.currency,
-      name:        CONFIG.streamerName,
-      description: `Tip from ${name}`,
-      handler: function() {
-        document.getElementById('sName').textContent = name;
-        document.getElementById('formView').hidden  = true;
-        document.getElementById('successView').hidden = false;
-      },
-      modal: {
-        ondismiss: () => {
-          btn.disabled = false;
-          btn.innerHTML = `Pay via UPI &nbsp;<span class="dim" id="amtPrev">₹${selectedAmount.toLocaleString('en-IN')}</span>`;
-        }
-      },
-      prefill:  { name },
-      theme:    { color: '#FF1A2E' },
-      method:   { upi: true, card: true, netbanking: true, wallet: true }
-    });
-    rzp.open();
+    if (!res.ok) throw new Error('Server error. Try again.');
+    document.getElementById('sName').textContent = name;
+    document.getElementById('formView').hidden   = true;
+    document.getElementById('successView').hidden = false;
   } catch(err) {
     errEl.textContent = err.message || 'Something went wrong.';
     btn.disabled = false;
-    btn.innerHTML = `Pay via UPI &nbsp;<span class="dim" id="amtPrev">₹${selectedAmount.toLocaleString('en-IN')}</span>`;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> I've Paid — Fire the Alert! <span class="dim">₹${selectedAmount.toLocaleString('en-IN')}</span>`;
   }
 });
 
-/* ── Reset after success ──────────────────────────────── */
+/* ── Reset ─────────────────────────────────────────────── */
 document.getElementById('againBtn').addEventListener('click', () => {
   document.getElementById('formView').hidden   = false;
   document.getElementById('successView').hidden = true;
@@ -849,18 +771,18 @@ document.getElementById('againBtn').addEventListener('click', () => {
   document.querySelectorAll('.chip').forEach((c, i) => c.classList.toggle('on', i === 0));
   const btn = document.getElementById('payBtn');
   btn.disabled = false;
-  btn.innerHTML = 'Pay via UPI &nbsp;<span class="dim" id="amtPrev">₹50</span>';
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> I've Paid — Fire the Alert! <span class="dim">₹50</span>`;
   setAmt(50);
 });
 
-/* ── Entry animation (fade-up on scroll) ─────────────── */
+/* ── Fade-up on scroll ─────────────────────────────────── */
 if ('IntersectionObserver' in window) {
   const style = document.createElement('style');
-  style.textContent = `.fade-up{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}.fade-up.vis{opacity:1;transform:none}`;
+  style.textContent = `@keyframes spin{to{transform:rotate(360deg)}}.fade-up{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}.fade-up.vis{opacity:1;transform:none}`;
   document.head.appendChild(style);
   document.querySelectorAll('.sec-head,.player-shell,.tip-card').forEach(el => {
     el.classList.add('fade-up');
-    new IntersectionObserver(([e]) => { if(e.isIntersecting){ el.classList.add('vis'); } }, { threshold:.1 }).observe(el);
+    new IntersectionObserver(([e]) => { if(e.isIntersecting) el.classList.add('vis'); }, { threshold:.1 }).observe(el);
   });
 }
 </script>
