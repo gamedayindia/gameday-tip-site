@@ -308,19 +308,19 @@ input,textarea{font-family:inherit}
   background:#fff;
   border-radius:22px;
 }
-/* Corner accent lines (over white background) */
+/* Corner accent lines */
 .qr-frame::before,.qr-frame::after{
   content:'';position:absolute;
-  width:28px;height:28px;
+  width:24px;height:24px;
   border-color:var(--red);border-style:solid;
   z-index:1;
 }
-.qr-frame::before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
-.qr-frame::after {bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.qr-frame::before{top:4px;left:4px;border-width:3px 0 0 3px;border-radius:3px 0 0 0}
+.qr-frame::after {bottom:4px;right:4px;border-width:0 3px 3px 0;border-radius:0 0 3px 0}
 .qr-img{
-  width:clamp(220px,60vw,280px);
-  height:clamp(220px,60vw,280px);
-  display:block;border-radius:8px;
+  width:clamp(180px,45vw,220px);
+  height:clamp(180px,45vw,220px);
+  display:block;border-radius:4px;
   image-rendering:crisp-edges;
 }
 /* Amount float badge */
@@ -333,8 +333,10 @@ input,textarea{font-family:inherit}
   font-family:'Space Grotesk',sans-serif;
   font-size:16px;font-weight:800;color:#fff;letter-spacing:-.01em;
   box-shadow:0 4px 20px var(--red-glow);white-space:nowrap;
-  transition:all .2s;
+  transition:opacity .2s,transform .2s;
+  min-width:60px;text-align:center;
 }
+.qr-amt-float:empty{opacity:0;transform:translateX(-50%) scale(.85);pointer-events:none}
 .qr-badge{
   display:inline-flex;align-items:center;gap:6px;
   margin-top:28px;
@@ -590,23 +592,22 @@ footer strong{color:var(--text2);font-weight:500}
 
       <div class="qr-divider"><span>Then fill this in</span></div>
 
-      <!-- AMOUNT CHIPS (reference) -->
-      <div class="row-label">How much did you send?</div>
-      <div class="chips" id="chipGroup">
-        <button class="chip g on" data-amount="50">₹50<span class="sub">small</span></button>
-        <button class="chip g"   data-amount="100">₹100<span class="sub">nice</span></button>
-        <button class="chip p"   data-amount="500">₹500<span class="sub">big</span></button>
-        <button class="chip rx"  data-amount="5000">₹5000<span class="sub">legend</span></button>
-      </div>
+      <!-- AMOUNT -->
       <div class="fld">
-        <input type="number" id="customAmt" placeholder="Other amount" min="1" max="500000" />
+        <label for="customAmt">Tip Amount <span class="note">(₹)</span></label>
+        <div class="inp-wrap">
+          <span class="inp-pre">₹</span>
+          <input class="pl" type="number" id="customAmt" placeholder="Tip Amount" min="1" max="500000" />
+        </div>
       </div>
 
-      <!-- NAME + MESSAGE -->
+      <!-- NAME -->
       <div class="fld">
         <label for="donorName">Your name</label>
-        <input type="text" id="donorName" placeholder="Anonymous" maxlength="50" />
+        <input type="text" id="donorName" placeholder="Your name" maxlength="50" />
       </div>
+
+      <!-- MESSAGE -->
       <div class="fld">
         <label for="donorMsg">Message <span class="note">(shown on stream)</span></label>
         <textarea id="donorMsg" placeholder="Say something awesome..." maxlength="200" rows="3"></textarea>
@@ -615,10 +616,10 @@ footer strong{color:var(--text2);font-weight:500}
       <p class="err" id="errMsg"></p>
 
       <!-- SUBMIT BUTTON -->
-      <button class="pay-btn" id="payBtn">
+      <button class="pay-btn" id="payBtn" disabled>
         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-        I've Paid — Fire the Alert!
-        <span class="dim" id="amtPrev">₹50</span>
+        Tip — Send The Alert
+        <span class="dim" id="amtPrev"></span>
       </button>
 
       <div class="note-row">
@@ -703,42 +704,31 @@ function switchTab(tab) {
   }
 }
 
-/* ── Amount chips ──────────────────────────────────────── */
-let selectedAmount = 50;
-
-function setAmt(v) {
-  selectedAmount = v;
-  const fmt = '₹' + v.toLocaleString('en-IN');
-  document.getElementById('amtPrev').textContent = fmt;
-  document.getElementById('qrAmtFloat').textContent = fmt;
-  document.getElementById('errMsg').textContent = '';
+/* ── Amount + Name → enable button ──────────────────────── */
+function checkForm() {
+  const amt  = Number(document.getElementById('customAmt').value);
+  const name = document.getElementById('donorName').value.trim();
+  const btn  = document.getElementById('payBtn');
+  const ok   = amt >= 1 && name.length > 0;
+  btn.disabled = !ok;
+  if (ok) {
+    const fmt = '₹' + amt.toLocaleString('en-IN');
+    document.getElementById('amtPrev').textContent = fmt;
+    document.getElementById('qrAmtFloat').textContent = fmt;
+  } else {
+    document.getElementById('qrAmtFloat').textContent = '';
+  }
 }
 
-document.getElementById('chipGroup').addEventListener('click', e => {
-  const chip = e.target.closest('[data-amount]');
-  if (!chip) return;
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
-  chip.classList.add('on');
-  document.getElementById('customAmt').value = '';
-  setAmt(Number(chip.dataset.amount));
-});
+document.getElementById('customAmt').addEventListener('input', checkForm);
+document.getElementById('donorName').addEventListener('input', checkForm);
 
-document.getElementById('customAmt').addEventListener('input', e => {
-  const v = Number(e.target.value);
-  if (v > 0) {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
-    setAmt(v);
-  }
-});
-
-/* ── Submit (fire alert) ───────────────────────────────── */
+/* ── Submit (fire alert) ──────────────────────────────── */
 document.getElementById('payBtn').addEventListener('click', async () => {
-  const amount  = selectedAmount;
-  const name    = (document.getElementById('donorName').value.trim() || 'Anonymous').substring(0, 50);
+  const amount  = Number(document.getElementById('customAmt').value);
+  const name    = document.getElementById('donorName').value.trim().substring(0, 50);
   const message = document.getElementById('donorMsg').value.trim().substring(0, 200);
   const errEl   = document.getElementById('errMsg');
-
-  if (!amount || amount < 1) { errEl.textContent = 'Please select or enter an amount.'; return; }
 
   const btn = document.getElementById('payBtn');
   btn.disabled = true;
@@ -752,27 +742,27 @@ document.getElementById('payBtn').addEventListener('click', async () => {
     });
     if (!res.ok) throw new Error('Server error. Try again.');
     document.getElementById('sName').textContent = name;
-    document.getElementById('formView').hidden   = true;
+    document.getElementById('formView').hidden    = true;
     document.getElementById('successView').hidden = false;
   } catch(err) {
     errEl.textContent = err.message || 'Something went wrong.';
     btn.disabled = false;
-    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> I've Paid — Fire the Alert! <span class="dim">₹${selectedAmount.toLocaleString('en-IN')}</span>`;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Tip — Send The Alert <span class="dim" id="amtPrev">₹${amount.toLocaleString('en-IN')}</span>`;
   }
 });
 
-/* ── Reset ─────────────────────────────────────────────── */
+/* ── Reset ────────────────────────────────────────────── */
 document.getElementById('againBtn').addEventListener('click', () => {
-  document.getElementById('formView').hidden   = false;
+  document.getElementById('formView').hidden    = false;
   document.getElementById('successView').hidden = true;
-  document.getElementById('donorName').value   = '';
-  document.getElementById('donorMsg').value    = '';
-  document.getElementById('customAmt').value   = '';
-  document.querySelectorAll('.chip').forEach((c, i) => c.classList.toggle('on', i === 0));
+  document.getElementById('donorName').value    = '';
+  document.getElementById('donorMsg').value     = '';
+  document.getElementById('customAmt').value    = '';
+  document.getElementById('qrAmtFloat').textContent = '';
+  document.getElementById('errMsg').textContent = '';
   const btn = document.getElementById('payBtn');
-  btn.disabled = false;
-  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> I've Paid — Fire the Alert! <span class="dim">₹50</span>`;
-  setAmt(50);
+  btn.disabled = true;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Tip — Send The Alert <span class="dim" id="amtPrev"></span>`;
 });
 
 /* ── Fade-up on scroll ─────────────────────────────────── */

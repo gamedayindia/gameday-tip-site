@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GameDay — Tip Page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --bg:          #05070E;
+  --bg2:         #0A0D18;
+  --bg3:         #0F1420;
+  --surface:     #141926;
+  --border:      #1C2436;
+  --border2:     #26334D;
+  --red:         #FF1A2E;
+  --red-dim:     rgba(255,26,46,0.12);
+  --red-glow:    rgba(255,26,46,0.35);
+  --cyan:        #00C8FF;
+  --cyan-dim:    rgba(0,200,255,0.07);
+  --text:        #DDE6F5;
+  --text2:       #8A9BB5;
+  --muted:       #4A5A72;
+  color-scheme: dark;
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+  line-height:1.6;
+}
+img{display:block}
+a{text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+input,textarea{font-family:inherit}
+
+/* ═══════════════════════════════════════════
+   AD BANNER CAROUSEL
+═══════════════════════════════════════════ */
+#bannerWrap{
+  position:relative;width:100%;overflow:hidden;
+  background:#000;display:none;
+}
+.banner-track{display:flex;transition:transform .55s cubic-bezier(.4,0,.2,1)}
+.banner-slide{
+  flex-shrink:0;width:100%;
+  height:clamp(140px,22vw,240px);
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+}
+.banner-slide img{width:100%;height:100%;object-fit:cover}
+.banner-btn{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+  border:1px solid var(--border2);color:var(--text);
+  font-size:20px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;z-index:9;
+}
+.banner-btn:hover{background:var(--red)}
+#bannerPrev{left:12px}
+#bannerNext{right:12px}
+.banner-dots{
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  display:flex;gap:7px;z-index:9;
+}
+.bdot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.35);cursor:pointer;
+  transition:background .15s,transform .15s;
+}
+.bdot.on{background:var(--red);transform:scale(1.4)}
+
+/* ═══════════════════════════════════════════
+   STICKY NAV
+═══════════════════════════════════════════ */
+.nav{
+  position:sticky;top:0;z-index:200;
+  height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(16px,4vw,40px);
+  background:rgba(5,7,14,.88);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-brand{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:18px;font-weight:800;letter-spacing:-.03em;
+  color:var(--text);display:flex;align-items:center;gap:3px;
+}
+.nav-brand .r{color:var(--red)}
+.nav-icons{display:flex;gap:6px}
+.nav-icon{
+  width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);border:1px solid transparent;
+  transition:color .13s,background .13s,border-color .13s;
+}
+.nav-icon:hover{color:var(--text);background:var(--surface);border-color:var(--border2)}
+.nav-icon svg{width:15px;height:15px;fill:currentColor}
+.nav-cta{
+  padding:8px 18px;
+  background:var(--red);color:#fff;border:none;border-radius:9px;
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;
+  letter-spacing:.02em;
+  transition:filter .15s,transform .12s;
+  box-shadow:0 2px 14px var(--red-glow);
+}
+.nav-cta:hover{filter:brightness(1.12);transform:translateY(-1px)}
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+.hero{
+  position:relative;min-height:100svh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;padding:80px clamp(16px,5vw,60px);
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% -10%,rgba(255,26,46,.18) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 50% at 85% 80%,rgba(0,200,255,.08) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 70% at 10% 70%,rgba(255,26,46,.06) 0%,transparent 55%),
+    linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
+  z-index:0;
+}
+.hero-grid{
+  position:absolute;inset:0;z-index:1;
+  background-image:
+    linear-gradient(rgba(0,200,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,200,255,.03) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(ellipse 100% 100% at 50% 50%,#000 10%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse 100% 100% at 50% 50%,#000 10%,transparent 75%);
+}
+.hero-scanline{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  animation:scanDown 6s ease-in-out infinite;z-index:2;opacity:.4;
+}
+@keyframes scanDown{0%{top:-2px}100%{top:100%}}
+.hero-content{
+  position:relative;z-index:3;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:22px;
+}
+.avatar-wrap{position:relative;width:140px;height:140px}
+.avatar-ring{
+  position:absolute;inset:-5px;border-radius:50%;
+  background:conic-gradient(from 0deg at 50% 50%,var(--red) 0%,transparent 40%,var(--cyan) 60%,transparent 80%,var(--red) 100%);
+  animation:spinRing 5s linear infinite;
+}
+@keyframes spinRing{to{transform:rotate(360deg)}}
+.avatar-bg{position:absolute;inset:2px;border-radius:50%;background:var(--bg)}
+.avatar-img{
+  position:absolute;inset:5px;border-radius:50%;
+  object-fit:cover;width:calc(100% - 10px);height:calc(100% - 10px);
+  box-shadow:0 0 50px var(--red-glow),0 0 100px rgba(255,26,46,.12);
+}
+.hero-name{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(52px,10vw,88px);font-weight:800;letter-spacing:-.04em;line-height:1;
+  color:var(--text);text-shadow:0 0 80px rgba(255,26,46,.25);
+}
+.hero-name .r{color:var(--red)}
+.hero-tagline{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan)}
+.hero-socials{display:flex;gap:10px}
+.h-soc{
+  width:46px;height:46px;border-radius:13px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);border:1px solid var(--border);background:var(--bg2);
+  transition:all .18s;
+}
+.h-soc:hover{transform:translateY(-4px);border-color:var(--border2)}
+.h-soc.yt:hover{color:#FF4444;border-color:rgba(255,68,68,.5);background:rgba(255,68,68,.08);box-shadow:0 8px 24px rgba(255,68,68,.2)}
+.h-soc.tw:hover{color:#9146FF;border-color:rgba(145,70,255,.5);background:rgba(145,70,255,.08);box-shadow:0 8px 24px rgba(145,70,255,.2)}
+.h-soc.ig:hover{color:#E1306C;border-color:rgba(225,48,108,.5);background:rgba(225,48,108,.08);box-shadow:0 8px 24px rgba(225,48,108,.2)}
+.h-soc svg{width:19px;height:19px;fill:currentColor}
+.hero-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 32px;
+  background:var(--red);color:#fff;border-radius:12px;border:none;
+  font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.02em;
+  box-shadow:0 4px 32px var(--red-glow);
+  transition:filter .15s,transform .15s,box-shadow .15s;
+}
+.hero-cta:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 10px 44px var(--red-glow)}
+.hero-cta svg{width:18px;height:18px;fill:currentColor}
+.live-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 14px;
+  background:rgba(255,26,46,.1);border:1px solid rgba(255,26,46,.3);
+  border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--red);
+}
+.live-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--red);box-shadow:0 0 8px var(--red);
+  animation:throb 1.6s ease-in-out infinite;
+}
+@keyframes throb{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.scroll-hint{
+  position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  animation:floatHint 2s ease-in-out infinite;z-index:3;
+}
+@keyframes floatHint{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+.scroll-hint svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+
+/* ═══════════════════════════════════════════
+   SECTION SHARED
+═══════════════════════════════════════════ */
+.sec{padding:clamp(60px,8vw,100px) clamp(16px,5vw,60px)}
+.sec-head{text-align:center;margin-bottom:48px}
+.eyebrow{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--cyan);margin-bottom:12px}
+.sec-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:800;letter-spacing:-.03em;color:var(--text)}
+.sec-title .r{color:var(--red)}
+
+/* ═══════════════════════════════════════════
+   STREAM SECTION
+═══════════════════════════════════════════ */
+.stream-sec{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+.player-shell{
+  max-width:860px;margin:0 auto;border-radius:18px;overflow:hidden;
+  border:1px solid var(--border2);
+  box-shadow:0 0 80px rgba(0,200,255,.05),0 30px 80px rgba(0,0,0,.5);
+}
+.ptabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
+.ptab{
+  flex:1;padding:13px 0;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;letter-spacing:.03em;
+  color:var(--muted);background:none;border:none;
+  transition:color .13s,background .13s;position:relative;
+}
+.ptab svg{width:15px;height:15px;fill:currentColor}
+.ptab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:currentColor;transform:scaleX(0);transition:transform .2s}
+.ptab.on{color:var(--text);background:var(--bg2)}
+.ptab.on::after{transform:scaleX(1)}
+.ptab.yt.on{color:#FF4444}
+.ptab.tw.on{color:#9146FF}
+.pscreen{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+.pscreen iframe{position:absolute;inset:0;width:100%;height:100%;border:none;display:block}
+
+/* ═══════════════════════════════════════════
+   TIP SECTION
+═══════════════════════════════════════════ */
+.tip-sec{
+  background:var(--bg2);position:relative;overflow:hidden;
+}
+.tip-sec::before{
+  content:'';
+  position:absolute;bottom:-100px;left:50%;transform:translateX(-50%);
+  width:700px;height:400px;
+  background:radial-gradient(ellipse at center,rgba(255,26,46,.07) 0%,transparent 65%);
+  pointer-events:none;
+}
+.tip-sec::after{
+  content:'';position:absolute;top:0;right:0;width:300px;height:300px;
+  background:radial-gradient(circle at 100% 0%,rgba(0,200,255,.05) 0%,transparent 60%);
+  pointer-events:none;
+}
+.tip-card{
+  max-width:600px;margin:0 auto;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:22px;
+  padding:clamp(28px,5vw,44px);position:relative;
+  box-shadow:0 24px 80px rgba(0,0,0,.55);
+}
+.tip-card::before{
+  content:'';position:absolute;inset:-1px;border-radius:22px;
+  background:linear-gradient(135deg,rgba(255,26,46,.25) 0%,transparent 45%,rgba(0,200,255,.12) 100%);
+  z-index:-1;opacity:0;transition:opacity .4s;
+}
+.tip-card:hover::before{opacity:1}
+
+/* ── QR Block ───────────────────────────────── */
+.qr-block{
+  display:flex;flex-direction:column;align-items:center;
+  gap:0;margin-bottom:28px;
+}
+/* QR outer glow ring (animated) */
+.qr-glow-ring{
+  position:relative;
+  padding:3px;
+  border-radius:24px;
+  background:conic-gradient(from 0deg,var(--red),var(--cyan),var(--red));
+  animation:spinRingQR 4s linear infinite;
+  box-shadow:0 0 50px rgba(255,26,46,.35),0 0 100px rgba(0,200,255,.12);
+}
+@keyframes spinRingQR{to{filter:hue-rotate(360deg)}}
+.qr-frame{
+  position:relative;
+  padding:16px;
+  background:#fff;
+  border-radius:22px;
+}
+/* Corner accent lines */
+.qr-frame::before,.qr-frame::after{
+  content:'';position:absolute;
+  width:24px;height:24px;
+  border-color:var(--red);border-style:solid;
+  z-index:1;
+}
+.qr-frame::before{top:4px;left:4px;border-width:3px 0 0 3px;border-radius:3px 0 0 0}
+.qr-frame::after {bottom:4px;right:4px;border-width:0 3px 3px 0;border-radius:0 0 3px 0}
+.qr-img{
+  width:clamp(180px,45vw,220px);
+  height:clamp(180px,45vw,220px);
+  display:block;border-radius:4px;
+  image-rendering:crisp-edges;
+}
+/* Amount float badge */
+.qr-amt-float{
+  position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  display:inline-flex;align-items:center;
+  padding:5px 20px;
+  background:linear-gradient(135deg,#cc0f20,var(--red));
+  border-radius:100px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:16px;font-weight:800;color:#fff;letter-spacing:-.01em;
+  box-shadow:0 4px 20px var(--red-glow);white-space:nowrap;
+  transition:opacity .2s,transform .2s;
+  min-width:60px;text-align:center;
+}
+.qr-amt-float:empty{opacity:0;transform:translateX(-50%) scale(.85);pointer-events:none}
+.qr-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:28px;
+  padding:7px 16px;
+  background:linear-gradient(135deg,rgba(255,26,46,.1),rgba(0,200,255,.06));
+  border:1px solid var(--border2);border-radius:100px;
+  font-size:12px;font-weight:600;color:var(--text2);letter-spacing:.03em;
+}
+.qr-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:throb 1.6s ease-in-out infinite}
+.qr-apps{
+  display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;justify-content:center;
+}
+.qr-app{
+  font-size:11px;font-weight:600;padding:4px 12px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:100px;
+  color:var(--muted);letter-spacing:.02em;
+}
+.qr-divider{
+  width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--border2),transparent);
+  margin:28px 0 20px;position:relative;
+}
+.qr-divider span{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--bg3);padding:0 14px;
+  font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+}
+
+/* ── Amount chips ───────────────────────────── */
+.row-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.chip{
+  padding:11px 6px;
+  background:var(--surface);border:1.5px solid var(--border2);border-radius:11px;
+  color:var(--text2);
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;
+  text-align:center;line-height:1.1;
+  transition:border-color .13s,background .13s,color .13s;
+}
+.chip:hover:not(.on){border-color:var(--border);color:var(--text)}
+.chip .sub{display:block;font-size:9.5px;font-weight:400;font-family:'Inter',sans-serif;color:var(--muted);margin-top:3px}
+.chip.on{border-color:transparent;color:#fff}
+.chip.on .sub{color:rgba(255,255,255,.6)}
+.chip.g.on {background:linear-gradient(135deg,#06521f,#0a7d2e)}
+.chip.p.on {background:linear-gradient(135deg,#2a0952,#4a1480)}
+.chip.rx.on{background:linear-gradient(135deg,#520615,#881020)}
+
+/* ── Fields ────────────────────────────────── */
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.fld label .note{text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)}
+.fld input,.fld textarea{
+  width:100%;background:var(--surface);border:1.5px solid var(--border2);border-radius:11px;
+  padding:11px 14px;color:var(--text);font-size:14px;outline:none;
+  transition:border-color .15s,box-shadow .15s;resize:none;
+}
+.fld input::placeholder,.fld textarea::placeholder{color:var(--muted)}
+.fld input:focus,.fld textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
+
+/* ── Pay button ────────────────────────────── */
+.pay-btn{
+  width:100%;margin-top:20px;padding:15px;
+  background:linear-gradient(135deg,#cc0f20,var(--red));
+  color:#fff;border:none;border-radius:13px;
+  font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.02em;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 4px 24px var(--red-glow);
+  transition:filter .15s,transform .12s,box-shadow .15s;
+}
+.pay-btn:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 10px 36px var(--red-glow)}
+.pay-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.pay-btn svg{width:18px;height:18px;fill:currentColor;flex-shrink:0}
+.pay-btn .dim{opacity:.7;font-weight:500;font-size:13px}
+.err{color:#FF6868;font-size:12px;min-height:14px;margin-top:6px}
+.note-row{
+  text-align:center;margin-top:12px;font-size:12px;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.note-row svg{width:12px;height:12px;fill:var(--muted);flex-shrink:0}
+
+/* ── Success ───────────────────────────────── */
+.success{text-align:center;padding:24px 0}
+.sico{font-size:52px;margin-bottom:16px;animation:popIn .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.stitle{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:800;color:var(--text);margin-bottom:8px}
+.ssub{font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.6}
+.again{
+  padding:10px 26px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;
+  color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;
+  transition:border-color .13s;
+}
+.again:hover{border-color:var(--red)}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer{
+  padding:28px clamp(16px,4vw,40px);text-align:center;
+  border-top:1px solid var(--border);background:var(--bg);
+  font-size:12px;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;
+}
+footer strong{color:var(--text2);font-weight:500}
+.f-sep{opacity:.4}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:520px){
+  .nav-icons{display:none}
+  .chips{grid-template-columns:repeat(2,1fr)}
+  .hero-name{font-size:52px}
+  .qr-img{width:170px;height:170px}
+}
+@media(prefers-reduced-motion:reduce){
+  .avatar-ring,.live-dot,.hero-scanline,.scroll-hint{animation:none}
+  .sico{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     AD BANNER CAROUSEL
+     Drop images into /public/banners/
+══════════════════════════════════════ -->
+<div id="bannerWrap">
+  <div id="bannerTrack" class="banner-track"></div>
+  <button class="banner-btn" id="bannerPrev" aria-label="Previous">&#8249;</button>
+  <button class="banner-btn" id="bannerNext" aria-label="Next">&#8250;</button>
+  <div class="banner-dots" id="bannerDots"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     STICKY NAV
+══════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-brand">GAME<span class="r">DAY</span></div>
+  <div class="nav-icons">
+    <a class="nav-icon" href="https://www.youtube.com/@GAMEDAYHINDIGAMING" target="_blank" rel="noopener" title="YouTube">
+      <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+    </a>
+    <a class="nav-icon" href="https://www.twitch.tv/gamedayislive" target="_blank" rel="noopener" title="Twitch">
+      <svg viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+    </a>
+    <a class="nav-icon" href="https://www.instagram.com/gamedayislive/" target="_blank" rel="noopener" title="Instagram">
+      <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+    </a>
+  </div>
+  <a class="nav-cta" href="#tip">Send Tip ↗</a>
+</nav>
+
+<!-- ══════════════════════════════════════
+     HERO
+══════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-scanline"></div>
+  <div class="hero-content">
+    <div class="live-pill"><span class="live-dot"></span>Hindi Gaming Streamer</div>
+    <div class="avatar-wrap">
+      <div class="avatar-ring"></div>
+      <div class="avatar-bg"></div>
+      <img class="avatar-img" src="/logo.jpg" alt="GameDay" />
+    </div>
+    <h1 class="hero-name">GAME<span class="r">DAY</span></h1>
+    <p class="hero-tagline">Support the stream — your message goes live</p>
+    <div class="hero-socials">
+      <a class="h-soc yt" href="https://www.youtube.com/@GAMEDAYHINDIGAMING" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      </a>
+      <a class="h-soc tw" href="https://www.twitch.tv/gamedayislive" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+      </a>
+      <a class="h-soc ig" href="https://www.instagram.com/gamedayislive/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+      </a>
+    </div>
+    <a class="hero-cta" href="#tip">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      Send a Tip
+    </a>
+  </div>
+  <div class="scroll-hint" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     STREAM SECTION
+══════════════════════════════════════ -->
+<section class="sec stream-sec" id="stream">
+  <div class="sec-head">
+    <span class="eyebrow">▶ Watch</span>
+    <h2 class="sec-title">Catch the <span class="r">Stream</span></h2>
+  </div>
+  <div class="player-shell">
+    <div class="ptabs">
+      <button class="ptab yt on" id="tabYt" onclick="switchTab('yt')">
+        <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        YouTube
+      </button>
+      <button class="ptab tw" id="tabTw" onclick="switchTab('tw')">
+        <svg viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+        Twitch
+      </button>
+    </div>
+    <div class="pscreen">
+      <iframe id="ytFrame"
+        src="https://www.youtube.com/embed/live_stream?channel=UCu5LMkQhZdVlfNnoBso-nfg&autoplay=0&rel=0"
+        allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"
+        allowfullscreen></iframe>
+      <iframe id="twFrame" style="display:none" allow="autoplay;fullscreen" allowfullscreen></iframe>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     TIP SECTION
+══════════════════════════════════════ -->
+<section class="sec tip-sec" id="tip">
+  <div class="sec-head">
+    <span class="eyebrow">💸 Support</span>
+    <h2 class="sec-title">Send a <span class="r">Tip</span></h2>
+    <p style="color:var(--text2);font-size:14px;margin-top:10px">Scan → Pay → your message fires as an alert on stream</p>
+  </div>
+
+  <div class="tip-card">
+
+    <!-- FORM VIEW -->
+    <div id="formView">
+
+      <!-- QR CODE -->
+      <div class="qr-block">
+        <div class="qr-glow-ring">
+          <div class="qr-frame">
+            <img class="qr-img" src="/qr.jpg" alt="Scan to pay via UPI" />
+            <div class="qr-amt-float" id="qrAmtFloat">₹50</div>
+          </div>
+        </div>
+        <div class="qr-badge">
+          <span class="dot"></span>
+          Scan with any UPI app
+        </div>
+        <div class="qr-apps">
+          <span class="qr-app">📱 Google Pay</span>
+          <span class="qr-app">💜 PhonePe</span>
+          <span class="qr-app">🔵 Paytm</span>
+          <span class="qr-app">🇮🇳 BHIM</span>
+        </div>
+      </div>
+
+      <div class="qr-divider"><span>Then fill this in</span></div>
+
+      <!-- AMOUNT -->
+      <div class="fld">
+        <label for="customAmt">Tip Amount <span class="note">(₹)</span></label>
+        <div class="inp-wrap">
+          <span class="inp-pre">₹</span>
+          <input class="pl" type="number" id="customAmt" placeholder="Tip Amount" min="1" max="500000" />
+        </div>
+      </div>
+
+      <!-- NAME -->
+      <div class="fld">
+        <label for="donorName">Your name</label>
+        <input type="text" id="donorName" placeholder="Your name" maxlength="50" />
+      </div>
+
+      <!-- MESSAGE -->
+      <div class="fld">
+        <label for="donorMsg">Message <span class="note">(shown on stream)</span></label>
+        <textarea id="donorMsg" placeholder="Say something awesome..." maxlength="200" rows="3"></textarea>
+      </div>
+
+      <p class="err" id="errMsg"></p>
+
+      <!-- SUBMIT BUTTON -->
+      <button class="pay-btn" id="payBtn" disabled>
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        Tip — Send The Alert
+        <span class="dim" id="amtPrev"></span>
+      </button>
+
+      <div class="note-row">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        Pay on UPI first, then submit — your alert fires instantly
+      </div>
+    </div>
+
+    <!-- SUCCESS VIEW -->
+    <div class="success" id="successView" hidden>
+      <div class="sico">🎉</div>
+      <div class="stitle">Alert Fired!</div>
+      <p class="ssub">Your message is live on stream right now.<br>Thanks, <strong id="sName">friend</strong>! You're legendary.</p>
+      <button class="again" id="againBtn">Send another tip</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     FOOTER
+══════════════════════════════════════ -->
+<footer>
+  Pay via <strong>UPI</strong>
+  <span class="f-sep">·</span>
+  Google Pay · PhonePe · Paytm · BHIM
+  <span class="f-sep">·</span>
+  © 2024 GameDay
+</footer>
+
+<script>
+/* ── Banner Carousel ───────────────────────────────────── */
+(async function initBanner() {
+  try {
+    const r = await fetch('/api/banners');
+    const { banners } = await r.json();
+    if (!banners || !banners.length) return;
+    const wrap  = document.getElementById('bannerWrap');
+    const track = document.getElementById('bannerTrack');
+    const dots  = document.getElementById('bannerDots');
+    track.innerHTML = banners.map(src =>
+      `<div class="banner-slide"><img src="${src}" alt="Banner" loading="lazy" /></div>`
+    ).join('');
+    dots.innerHTML = banners.map((_, i) =>
+      `<div class="bdot${i===0?' on':''}" onclick="goSlide(${i})"></div>`
+    ).join('');
+    wrap.style.display = 'block';
+    let cur = 0, timer;
+    const total = banners.length;
+    function goSlide(n) {
+      cur = ((n % total) + total) % total;
+      track.style.transform = `translateX(-${cur * 100}%)`;
+      document.querySelectorAll('.bdot').forEach((d,i) => d.classList.toggle('on', i===cur));
+    }
+    window.goSlide = goSlide;
+    function startTimer() { timer = setInterval(() => goSlide(cur + 1), 5000); }
+    function stopTimer()  { clearInterval(timer); }
+    if (total > 1) {
+      startTimer();
+      document.getElementById('bannerPrev').addEventListener('click', () => { stopTimer(); goSlide(cur - 1); startTimer(); });
+      document.getElementById('bannerNext').addEventListener('click', () => { stopTimer(); goSlide(cur + 1); startTimer(); });
+    } else {
+      document.getElementById('bannerPrev').style.display = 'none';
+      document.getElementById('bannerNext').style.display = 'none';
+    }
+  } catch(_) {}
+})();
+
+/* ── Tab switcher ──────────────────────────────────────── */
+function switchTab(tab) {
+  const yt = document.getElementById('ytFrame');
+  const tw = document.getElementById('twFrame');
+  document.getElementById('tabYt').classList.toggle('on', tab === 'yt');
+  document.getElementById('tabTw').classList.toggle('on', tab === 'tw');
+  if (tab === 'yt') {
+    yt.style.display = ''; tw.style.display = 'none';
+  } else {
+    yt.style.display = 'none'; tw.style.display = '';
+    if (!tw.src || tw.src === 'about:blank') {
+      const p = location.hostname || 'localhost';
+      tw.src = `https://player.twitch.tv/?channel=gamedayislive&parent=${p}&autoplay=false`;
+    }
+  }
+}
+
+/* ── Amount + Name → enable button ──────────────────────── */
+function checkForm() {
+  const amt  = Number(document.getElementById('customAmt').value);
+  const name = document.getElementById('donorName').value.trim();
+  const btn  = document.getElementById('payBtn');
+  const ok   = amt >= 1 && name.length > 0;
+  btn.disabled = !ok;
+  if (ok) {
+    const fmt = '₹' + amt.toLocaleString('en-IN');
+    document.getElementById('amtPrev').textContent = fmt;
+    document.getElementById('qrAmtFloat').textContent = fmt;
+  } else {
+    document.getElementById('qrAmtFloat').textContent = '';
+  }
+}
+
+document.getElementById('customAmt').addEventListener('input', checkForm);
+document.getElementById('donorName').addEventListener('input', checkForm);
+
+/* ── Submit (fire alert) ──────────────────────────────── */
+document.getElementById('payBtn').addEventListener('click', async () => {
+  const amount  = Number(document.getElementById('customAmt').value);
+  const name    = document.getElementById('donorName').value.trim().substring(0, 50);
+  const message = document.getElementById('donorMsg').value.trim().substring(0, 200);
+  const errEl   = document.getElementById('errMsg');
+
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;animation:spin .8s linear infinite"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg> Sending alert…`;
+
+  try {
+    const res = await fetch('/confirm-tip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, name, message })
+    });
+    if (!res.ok) throw new Error('Server error. Try again.');
+    document.getElementById('sName').textContent = name;
+    document.getElementById('formView').hidden    = true;
+    document.getElementById('successView').hidden = false;
+  } catch(err) {
+    errEl.textContent = err.message || 'Something went wrong.';
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Tip — Send The Alert <span class="dim" id="amtPrev">₹${amount.toLocaleString('en-IN')}</span>`;
+  }
+});
+
+/* ── Reset ────────────────────────────────────────────── */
+document.getElementById('againBtn').addEventListener('click', () => {
+  document.getElementById('formView').hidden    = false;
+  document.getElementById('successView').hidden = true;
+  document.getElementById('donorName').value    = '';
+  document.getElementById('donorMsg').value     = '';
+  document.getElementById('customAmt').value    = '';
+  document.getElementById('qrAmtFloat').textContent = '';
+  document.getElementById('errMsg').textContent = '';
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Tip — Send The Alert <span class="dim" id="amtPrev"></span>`;
+});
+
+/* ── Fade-up on scroll ─────────────────────────────────── */
+if ('IntersectionObserver' in window) {
+  const style = document.createElement('style');
+  style.textContent = `@keyframes spin{to{transform:rotate(360deg)}}.fade-up{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}.fade-up.vis{opacity:1;transform:none}`;
+  document.head.appendChild(style);
+  document.querySelectorAll('.sec-head,.player-shell,.tip-card').forEach(el => {
+    el.classList.add('fade-up');
+    new IntersectionObserver(([e]) => { if(e.isIntersecting) el.classList.add('vis'); }, { threshold:.1 }).observe(el);
+  });
+}
+</script>
+</body>
+</html>
