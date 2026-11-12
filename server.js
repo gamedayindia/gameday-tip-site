@@ -51,7 +51,7 @@ app.get('/', (_req, res) => {
  * Docs: https://docs.streamelements.com/reference/tips_create
  */
 async function alertStreamElements({ donorName, amountINR, message }) {
-  if (!SE_JWT_TOKEN || !SE_CHANNEL_ID) return;
+  if (!SE_JWT_TOKEN || !SE_CHANNEL_ID) return false;
 
   try {
     await axios.post(
@@ -66,8 +66,10 @@ async function alertStreamElements({ donorName, amountINR, message }) {
       { headers: { 'Authorization': `Bearer ${SE_JWT_TOKEN}` } }
     );
     console.log(`🔔 StreamElements alert fired — ₹${amountINR} from ${donorName}`);
+    return true;
   } catch (err) {
     console.error('❌ StreamElements error:', err?.response?.data || err.message);
+    return false;
   }
 }
 
@@ -76,7 +78,7 @@ async function alertStreamElements({ donorName, amountINR, message }) {
  * Docs: https://dev.streamlabs.com/reference/donations-1
  */
 async function alertStreamlabs({ donorName, amountINR, message }) {
-  if (!STREAMLABS_ACCESS_TOKEN) return;
+  if (!STREAMLABS_ACCESS_TOKEN) return false;
 
   try {
     const params = new URLSearchParams({
@@ -95,8 +97,10 @@ async function alertStreamlabs({ donorName, amountINR, message }) {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
     console.log(`🔔 Streamlabs alert fired — ₹${amountINR} from ${donorName}`);
+    return true;
   } catch (err) {
     console.error('❌ Streamlabs error:', err?.response?.data || err.message);
+    return false;
   }
 }
 
@@ -117,13 +121,32 @@ app.post('/confirm-tip', async (req, res) => {
   console.log(`\n💸 Tip confirmed: ₹${amountINR} from ${donorName}`);
   if (tipMsg) console.log(`   Message: "${tipMsg}"`);
 
-  // Fire alerts on both platforms simultaneously
-  await Promise.all([
+  // Fire alerts on both platforms simultaneously, track results
+  const [seFired, slFired] = await Promise.all([
     alertStreamElements({ donorName, amountINR, message: tipMsg }),
     alertStreamlabs    ({ donorName, amountINR, message: tipMsg }),
   ]);
 
-  res.json({ ok: true });
+  const alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
+  const configured  = (SE_JWT_TOKEN && SE_CHANNEL_ID) || STREAMLABS_ACCESS_TOKEN;
+
+  if (!configured) {
+    console.warn('⚠️  No alert platform configured — set SE_JWT_TOKEN+SE_CHANNEL_ID or STREAMLABS_ACCESS_TOKEN in env vars');
+  }
+
+  res.json({ ok: true, alertsFired, configured: !!configured });
+});
+
+// ─── GET /api/health ──────────────────────────────────────────────────────
+// Called on page load so the UI can warn immediately if no alert platform is set
+app.get('/api/health', (_req, res) => {
+  const seConfigured = !!(SE_JWT_TOKEN && SE_CHANNEL_ID);
+  const slConfigured = !!STREAMLABS_ACCESS_TOKEN;
+  res.json({
+    seConfigured,
+    slConfigured,
+    configured: seConfigured || slConfigured,
+  });
 });
 
 // ─── GET /api/banners ──────────────────────────────────────────────────────
