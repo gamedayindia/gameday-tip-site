@@ -350,9 +350,90 @@ input,textarea{font-family:inherit}
   display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;justify-content:center;
 }
 .qr-app{
-  font-size:11px;font-weight:600;padding:4px 12px;
+  font-size:11px;font-weight:600;padding:5px 11px;
   background:var(--surface);border:1px solid var(--border2);border-radius:100px;
   color:var(--muted);letter-spacing:.02em;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.qr-app svg{flex-shrink:0}
+
+/* ═══════════════════════════════════════════
+   DONATION T&C SECTION
+═══════════════════════════════════════════ */
+.tnc-sec{
+  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
+  position:relative;overflow:hidden;
+  padding:clamp(60px,8vw,90px) clamp(16px,5vw,60px);
+}
+.tnc-sec::before{
+  content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+  width:600px;height:300px;
+  background:radial-gradient(ellipse,rgba(255,26,46,.05) 0%,transparent 70%);
+  pointer-events:none;
+}
+.tnc-card{
+  max-width:720px;margin:0 auto;
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+  position:relative;
+}
+.tnc-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,26,46,.06) 0%,transparent 50%,rgba(0,200,255,.03) 100%);
+  pointer-events:none;
+}
+.tnc-header{
+  padding:24px 32px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;
+  background:linear-gradient(90deg,rgba(255,26,46,.08) 0%,transparent 60%);
+}
+.tnc-heart{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(255,26,46,.18),rgba(255,26,46,.06));
+  border:1px solid rgba(255,26,46,.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+.tnc-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(16px,3vw,20px);font-weight:800;letter-spacing:-.02em;color:var(--text);
+}
+.tnc-title span{color:var(--red)}
+.tnc-subtitle{font-size:12px;color:var(--text2);margin-top:3px}
+.tnc-body{padding:24px 32px 28px;display:flex;flex-direction:column;gap:14px}
+.tnc-item{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:14px 16px;
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.045);
+  border-radius:14px;
+  transition:border-color .2s,background .2s;
+}
+.tnc-item:hover{background:rgba(255,255,255,.04);border-color:var(--border2)}
+.tnc-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;margin-top:1px;
+}
+.tnc-icon.nr{background:linear-gradient(135deg,rgba(255,26,46,.18),rgba(255,26,46,.06));border:1px solid rgba(255,26,46,.2)}
+.tnc-icon.gd{background:linear-gradient(135deg,rgba(0,200,100,.14),rgba(0,200,100,.04));border:1px solid rgba(0,200,100,.18)}
+.tnc-icon.sp{background:linear-gradient(135deg,rgba(255,165,0,.14),rgba(255,165,0,.04));border:1px solid rgba(255,165,0,.18)}
+.tnc-rule{font-size:13.5px;color:var(--text);font-weight:500;line-height:1.55}
+.tnc-rule strong{color:var(--text);font-weight:700}
+.tnc-rule span{color:var(--text2);font-size:12.5px}
+.tnc-footer{
+  padding:18px 32px;
+  border-top:1px solid var(--border);
+  background:linear-gradient(90deg,rgba(0,200,255,.04) 0%,transparent 60%);
+  font-size:13px;color:var(--text2);line-height:1.6;text-align:center;
+}
+.tnc-footer strong{color:var(--cyan);font-weight:600}
+@media(max-width:520px){
+  .tnc-header,.tnc-body,.tnc-footer{padding-left:18px;padding-right:18px}
 }
 .qr-divider{
   width:100%;height:1px;
@@ -546,11 +627,26 @@ footer strong{color:var(--text2);font-weight:500}
       </button>
     </div>
     <div class="pscreen">
+      <!-- YouTube: iframe shown when live; fallback banner when offline -->
       <iframe id="ytFrame"
         src="https://www.youtube.com/embed/live_stream?channel=UCu5LMkQhZdVlfNnoBso-nfg&autoplay=0&rel=0"
         allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"
         allowfullscreen></iframe>
+      <div id="ytBanner" hidden style="position:absolute;inset:0;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <img src="/youtube-banner.png" alt="GameDay YT — offline" style="width:100%;height:100%;object-fit:cover;object-position:center" />
+        <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.72);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:6px 18px;font-size:12px;font-weight:600;color:#ccc;white-space:nowrap;letter-spacing:.04em">
+          🔴 Stream offline — new videos every week
+        </div>
+      </div>
+
+      <!-- Twitch: iframe shown when live; fallback banner when offline -->
       <iframe id="twFrame" style="display:none" allow="autoplay;fullscreen" allowfullscreen></iframe>
+      <div id="twBanner" hidden style="position:absolute;inset:0;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <img src="/twitch-banner.png" alt="GameDay is Live — Twitch offline" style="width:100%;height:100%;object-fit:cover;object-position:center" />
+        <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.72);backdrop-filter:blur(8px);border:1px solid rgba(145,70,255,.35);border-radius:100px;padding:6px 18px;font-size:12px;font-weight:600;color:#b39ddb;white-space:nowrap;letter-spacing:.04em">
+          🟣 Not live right now — follow to get notified
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -565,6 +661,24 @@ footer strong{color:var(--text2);font-weight:500}
     <p style="color:var(--text2);font-size:14px;margin-top:10px">Scan → Pay → your message fires as an alert on stream</p>
   </div>
 
+  <!-- CONFIG WARNING — shown on page load if no alert platform is configured -->
+  <div id="configWarn" hidden style="
+    margin:0 0 18px;padding:14px 16px;
+    background:rgba(255,30,46,.10);border:1px solid rgba(255,30,46,.4);
+    border-radius:12px;font-size:13px;color:#ff6b7a;line-height:1.65;text-align:left;
+  ">
+    ⚠️ <strong style="color:#FF1A2E">Alert platform not configured.</strong><br>
+    Your tip page is live but alerts won't fire. Set at least one of these in your
+    <strong>Render → Environment</strong> dashboard, then redeploy:<br><br>
+    &nbsp;• <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px">SE_CHANNEL_ID</code> + <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px">SE_JWT_TOKEN</code>  &nbsp;(StreamElements)<br>
+    &nbsp;• <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px">STREAMLABS_ACCESS_TOKEN</code>  &nbsp;(Streamlabs)<br><br>
+    <span style="color:rgba(255,255,255,.45);font-size:11.5px">
+      SE token: Dashboard → Account Settings → "Show Latest Secret"<br>
+      SE channel ID: visible in your SE dashboard URL after the #<br>
+      Streamlabs token: Dashboard → Settings → API Settings → Access Token
+    </span>
+  </div>
+
   <div class="tip-card">
 
     <!-- FORM VIEW -->
@@ -575,7 +689,7 @@ footer strong{color:var(--text2);font-weight:500}
         <div class="qr-glow-ring">
           <div class="qr-frame">
             <img class="qr-img" src="/qr.jpg" alt="Scan to pay via UPI" />
-            <div class="qr-amt-float" id="qrAmtFloat">₹50</div>
+            <div class="qr-amt-float" id="qrAmtFloat"></div>
           </div>
         </div>
         <div class="qr-badge">
@@ -583,10 +697,44 @@ footer strong{color:var(--text2);font-weight:500}
           Scan with any UPI app
         </div>
         <div class="qr-apps">
-          <span class="qr-app">📱 Google Pay</span>
-          <span class="qr-app">💜 PhonePe</span>
-          <span class="qr-app">🔵 Paytm</span>
-          <span class="qr-app">🇮🇳 BHIM</span>
+          <!-- Google Pay -->
+          <span class="qr-app">
+            <svg viewBox="0 0 48 48" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#4285F4" d="M24 9.5c3.9 0 7.4 1.4 10.1 3.7l7.5-7.5C37.4 1.9 31.1 0 24 0 14.7 0 6.6 5.1 2.5 12.6l8.7 6.8C13.1 13.2 18.1 9.5 24 9.5z"/>
+              <path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8C43.9 37.5 46.5 31.4 46.5 24.5z"/>
+              <path fill="#FBBC05" d="M11.2 28.6C10.5 26.8 10.1 24.9 10.1 23s.5-3.8 1.1-5.6L2.5 10.6C.9 13.8 0 17.3 0 21s.9 7.2 2.5 10.4l8.7-2.8z"/>
+              <path fill="#EA4335" d="M24 48c6.5 0 12-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.2-8.4 2.2-5.9 0-10.9-3.7-12.8-9l-8.7 2.8C6.6 42.9 14.7 48 24 48z"/>
+            </svg>
+            Google Pay
+          </span>
+          <!-- PhonePe -->
+          <span class="qr-app">
+            <svg viewBox="0 0 48 48" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+              <rect width="48" height="48" rx="12" fill="#5F259F"/>
+              <path d="M34 16.5c0-4.1-3.4-7.5-7.5-7.5H14v27h5v-9h7.5c4.1 0 7.5-3.4 7.5-7.5zM26.5 22H19v-8h7.5c2.2 0 4 1.8 4 4s-1.8 4-4 4z" fill="#fff"/>
+              <circle cx="34" cy="34" r="6" fill="#04BEF8"/>
+            </svg>
+            PhonePe
+          </span>
+          <!-- Paytm -->
+          <span class="qr-app">
+            <svg viewBox="0 0 48 48" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+              <rect width="48" height="48" rx="8" fill="#002970"/>
+              <path d="M8 24c0-8.8 7.2-16 16-16s16 7.2 16 16-7.2 16-16 16S8 32.8 8 24z" fill="#00BAF2"/>
+              <path d="M28 20h-8v8h3v-5h5c1.1 0 2 .9 2 2v3h3v-3c0-2.8-2.2-5-5-5z" fill="#fff"/>
+            </svg>
+            Paytm
+          </span>
+          <!-- BHIM -->
+          <span class="qr-app">
+            <svg viewBox="0 0 48 48" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+              <rect width="48" height="48" rx="8" fill="#F37020"/>
+              <path d="M12 32V16h7c3.3 0 6 2.7 6 6s-2.7 6-6 6h-3v4h-4zm4-8h3c1.1 0 2-.9 2-2s-.9-2-2-2h-3v4z" fill="#fff"/>
+              <path d="M27 16h4v16h-4z" fill="#fff"/>
+              <path d="M33 16h4l4 8-4 8h-4l4-8z" fill="#fff"/>
+            </svg>
+            BHIM
+          </span>
         </div>
       </div>
 
@@ -633,8 +781,68 @@ footer strong{color:var(--text2);font-weight:500}
       <div class="sico">🎉</div>
       <div class="stitle">Alert Fired!</div>
       <p class="ssub">Your message is live on stream right now.<br>Thanks, <strong id="sName">friend</strong>! You're legendary.</p>
+      <div id="alertWarn" hidden style="
+        margin:0 0 18px;padding:12px 16px;
+        background:rgba(255,180,0,.08);border:1px solid rgba(255,180,0,.3);
+        border-radius:10px;font-size:12.5px;color:#FFB400;text-align:left;line-height:1.6;
+      ">
+        ⚠️ <strong>No alert platform configured.</strong><br>
+        Set <code style="font-size:11px;background:rgba(0,0,0,.3);padding:1px 5px;border-radius:4px">SE_JWT_TOKEN + SE_CHANNEL_ID</code> or
+        <code style="font-size:11px;background:rgba(0,0,0,.3);padding:1px 5px;border-radius:4px">STREAMLABS_ACCESS_TOKEN</code>
+        in your Render environment variables to fire live alerts.
+      </div>
       <button class="again" id="againBtn">Send another tip</button>
     </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     DONATION T&C
+══════════════════════════════════════ -->
+<section class="tnc-sec" id="tnc">
+  <div class="tnc-card">
+
+    <div class="tnc-header">
+      <div class="tnc-heart">❤️</div>
+      <div>
+        <div class="tnc-title">A Little Note Before You <span>Donate</span>!</div>
+        <div class="tnc-subtitle">Please read before sending a tip — it only takes 10 seconds 🙏</div>
+      </div>
+    </div>
+
+    <div class="tnc-body">
+
+      <div class="tnc-item">
+        <div class="tnc-icon nr">🚫</div>
+        <div class="tnc-rule">
+          <strong>Donations are NON-REFUNDABLE.</strong><br>
+          <span>Please double-check your name, message, and amount before hitting send. We cannot reverse a completed UPI payment.</span>
+        </div>
+      </div>
+
+      <div class="tnc-item">
+        <div class="tnc-icon gd">💚</div>
+        <div class="tnc-rule">
+          <strong>Only donate what you can truly spare.</strong><br>
+          <span>Your needs always come first. No amount is too small, and you're just as welcome without a tip — your presence here means everything.</span>
+        </div>
+      </div>
+
+      <div class="tnc-item">
+        <div class="tnc-icon sp">⚠️</div>
+        <div class="tnc-rule">
+          <strong>Don't spam the alert button without donating.</strong><br>
+          <span>Repeated misuse of the tip form without completing payment may result in a permanent BAN from the community.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tnc-footer">
+      Your time, love, and presence mean more than any donation.<br>
+      Thanks for being part of the <strong>GAMEDAY</strong> family! ❤️🎮
+    </div>
+
   </div>
 </section>
 
@@ -688,21 +896,93 @@ footer strong{color:var(--text2);font-weight:500}
 })();
 
 /* ── Tab switcher ──────────────────────────────────────── */
+// Track whether each embed is "live" (iframe loaded real content vs error page)
+const _liveState = { yt: null, tw: null }; // null=unknown, true=live, false=offline
+
+function showStreamOrBanner(tab, isLive) {
+  const iframe = document.getElementById(tab === 'yt' ? 'ytFrame' : 'twFrame');
+  const banner = document.getElementById(tab === 'yt' ? 'ytBanner' : 'twBanner');
+  _liveState[tab] = isLive;
+  if (isLive) {
+    iframe.style.display = '';
+    if (banner) banner.hidden = true;
+  } else {
+    iframe.style.display = 'none';
+    if (banner) { banner.hidden = false; banner.style.display = 'flex'; }
+  }
+}
+
+// YouTube: listen for iframe load — if the embed shows an error page the
+// iframe still fires "load" but its naturalHeight is 0 on the inner content;
+// we detect this by listening for the YouTube postMessage API no-stream signal.
+(function initYTStatus() {
+  const ytFrame = document.getElementById('ytFrame');
+  // Show banner immediately as placeholder until we know if live
+  showStreamOrBanner('yt', false);
+  // Listen for YouTube embed ready / no-stream messages
+  window.addEventListener('message', (e) => {
+    if (!e.origin.includes('youtube.com')) return;
+    try {
+      const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+      if (d?.event === 'onReady') showStreamOrBanner('yt', true);
+      if (d?.event === 'onError') showStreamOrBanner('yt', false);
+    } catch(_) {}
+  });
+  // Fallback: if iframe src loads and doesn't fire onReady within 5s, assume live
+  // (the YouTube live_stream embed fires onReady even when stream is active)
+  ytFrame.addEventListener('load', () => {
+    setTimeout(() => { if (_liveState.yt === false) showStreamOrBanner('yt', true); }, 4000);
+  });
+})();
+
 function switchTab(tab) {
   const yt = document.getElementById('ytFrame');
   const tw = document.getElementById('twFrame');
+  const ytB = document.getElementById('ytBanner');
+  const twB = document.getElementById('twBanner');
   document.getElementById('tabYt').classList.toggle('on', tab === 'yt');
   document.getElementById('tabTw').classList.toggle('on', tab === 'tw');
+
   if (tab === 'yt') {
-    yt.style.display = ''; tw.style.display = 'none';
+    // Show YT side (iframe or its banner)
+    if (_liveState.yt === false) {
+      yt.style.display = 'none'; ytB.hidden = false; ytB.style.display = 'flex';
+    } else {
+      yt.style.display = ''; ytB.hidden = true;
+    }
+    // Hide TW side
+    tw.style.display = 'none'; twB.hidden = true;
   } else {
-    yt.style.display = 'none'; tw.style.display = '';
+    // Hide YT side
+    yt.style.display = 'none'; ytB.hidden = true;
+    // Show TW side
     if (!tw.src || tw.src === 'about:blank') {
       const p = location.hostname || 'localhost';
       tw.src = `https://player.twitch.tv/?channel=gamedayislive&parent=${p}&autoplay=false`;
+      // Show Twitch banner while loading, switch to iframe after first load
+      showStreamOrBanner('tw', false);
+      tw.addEventListener('load', () => showStreamOrBanner('tw', true), { once: true });
+    } else {
+      if (_liveState.tw === false) {
+        tw.style.display = 'none'; twB.hidden = false; twB.style.display = 'flex';
+      } else {
+        tw.style.display = ''; twB.hidden = true;
+      }
     }
   }
 }
+
+/* ── Page-load health check — show banner if no alert platform configured ── */
+(async () => {
+  try {
+    const r = await fetch('/api/health');
+    if (!r.ok) return; // old server without /api/health — stay silent
+    const h = await r.json();
+    if (!h.configured) {
+      document.getElementById('configWarn').hidden = false;
+    }
+  } catch (_) { /* network error — stay silent */ }
+})();
 
 /* ── Amount + Name → enable button ──────────────────────── */
 function checkForm() {
@@ -740,12 +1020,28 @@ document.getElementById('payBtn').addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount, name, message })
     });
-    if (!res.ok) throw new Error('Server error. Try again.');
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      throw new Error(res.status === 404
+        ? 'Server not updated yet — please redeploy the latest server.js'
+        : `Server error ${res.status}. ${txt}`);
+    }
+
+    const data = await res.json();
+
+    // Show success screen
     document.getElementById('sName').textContent = name;
     document.getElementById('formView').hidden    = true;
     document.getElementById('successView').hidden = false;
+
+    // Warn if no alert platform is configured
+    if (!data.configured) {
+      document.getElementById('alertWarn').hidden = false;
+    }
+
   } catch(err) {
-    errEl.textContent = err.message || 'Something went wrong.';
+    errEl.textContent = err.message || 'Something went wrong. Check your internet connection.';
     btn.disabled = false;
     btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Tip — Send The Alert <span class="dim" id="amtPrev">₹${amount.toLocaleString('en-IN')}</span>`;
   }
@@ -755,6 +1051,7 @@ document.getElementById('payBtn').addEventListener('click', async () => {
 document.getElementById('againBtn').addEventListener('click', () => {
   document.getElementById('formView').hidden    = false;
   document.getElementById('successView').hidden = true;
+  document.getElementById('alertWarn').hidden   = true;
   document.getElementById('donorName').value    = '';
   document.getElementById('donorMsg').value     = '';
   document.getElementById('customAmt').value    = '';
