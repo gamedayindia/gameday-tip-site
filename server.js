@@ -71,8 +71,10 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/admin', (_req, res) => {
-  // Serve admin panel inline so no separate file is needed in public/
+app.get('/admin', (req, res) => {
+  // If password passed as query param, pre-authenticate and skip login screen
+  const preAuth = (req.query.pw === ADMIN_PASSWORD) ? 'true' : 'false';
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
   const adminHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -186,9 +188,8 @@ document.getElementById('loginBtn').addEventListener('click',tryLogin);
 document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
 document.getElementById('refreshBtn').addEventListener('click',()=>loadTips(true));
 document.getElementById('logoutBtn').addEventListener('click',logout);
-// Auto-login via URL param: /admin?pw=yourpassword
-const urlPw=new URLSearchParams(location.search).get('pw');
-if(urlPw){document.getElementById('pwInput').value=urlPw;_password=urlPw;tryLogin();}
+// Server pre-authenticated via ?pw= query param
+if('${preAuth}'==='true'){_password=new URLSearchParams(location.search).get('pw');sessionStorage.setItem('gd_admin_pw',_password);showAdminPanel();}
 else if(_password){showAdminPanel();}
 </script>
 </body>
