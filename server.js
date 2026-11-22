@@ -174,7 +174,7 @@ function showStatus(msg,ok=true){const bar=document.getElementById('statusBar');
 function timeAgo(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';return Math.floor(s/3600)+'h ago'}
 function formatINR(n){return '\\u20B9'+Number(n).toLocaleString('en-IN')}
 async function apiFetch(url,opts={}){const r=await fetch(url,{...opts,headers:{'Content-Type':'application/json','x-admin-password':_password,...(opts.headers||{})}});if(r.status===401)throw new Error('AUTH_FAIL');if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
-async function tryLogin(){const pw=document.getElementById('pwInput').value.trim();const err=document.getElementById('loginErr');if(!pw){err.textContent='Enter your password first.';return}const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='Checking…';err.textContent='';try{_password=pw;await apiFetch('/api/admin/tips');sessionStorage.setItem('gd_admin_pw',pw);showAdminPanel()}catch(e){if(e.message==='AUTH_FAIL'){err.textContent='❌ Wrong password. Try again.'}else{err.textContent='⚠️ Could not connect. Check your internet.'}btn.disabled=false;btn.textContent='Unlock →'}}
+async function tryLogin(){const pw=document.getElementById('pwInput').value.trim();const err=document.getElementById('loginErr');if(!pw){err.textContent='Enter your password first.';return}const btn=document.getElementById('loginBtn');btn.disabled=true;btn.innerHTML='<span class="spin" style="display:inline-block;margin-right:6px">↻</span>Checking…';err.textContent='';try{_password=pw;await apiFetch('/api/admin/tips');sessionStorage.setItem('gd_admin_pw',pw);showAdminPanel()}catch(e){if(e.message==='AUTH_FAIL'){err.textContent='❌ Wrong password. Try again.'}else{err.textContent='⚠️ Could not connect. Check your internet.'}btn.disabled=false;btn.textContent='Unlock →'}}
 function showAdminPanel(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminPanel').style.display='block';loadTips();startAutoRefresh()}
 function logout(){_password='';sessionStorage.removeItem('gd_admin_pw');clearInterval(_pollTimer);document.getElementById('adminPanel').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('pwInput').value='';document.getElementById('loginErr').textContent='';document.getElementById('loginBtn').disabled=false;document.getElementById('loginBtn').textContent='Unlock →'}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -186,7 +186,10 @@ document.getElementById('loginBtn').addEventListener('click',tryLogin);
 document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
 document.getElementById('refreshBtn').addEventListener('click',()=>loadTips(true));
 document.getElementById('logoutBtn').addEventListener('click',logout);
-if(_password)showAdminPanel();
+// Auto-login via URL param: /admin?pw=yourpassword
+const urlPw=new URLSearchParams(location.search).get('pw');
+if(urlPw){document.getElementById('pwInput').value=urlPw;_password=urlPw;tryLogin();}
+else if(_password){showAdminPanel();}
 </script>
 </body>
 </html>`;
