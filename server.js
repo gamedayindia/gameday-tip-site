@@ -72,7 +72,125 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/admin', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  // Serve admin panel inline so no separate file is needed in public/
+  const adminHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GameDay Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#05070E;--surface:#0D1117;--card:#121820;--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.12);--red:#FF1A2E;--cyan:#00C8FF;--green:#00E676;--text:#F0F4FF;--text2:#8899BB;--muted:#445566;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px)}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bot) + 24px);overflow-x:hidden}
+  .topbar{position:sticky;top:0;z-index:100;background:rgba(5,7,14,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:14px 20px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .topbar-logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;letter-spacing:-.3px}
+  .logo-dot{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:logoPulse 2s ease-in-out infinite}
+  @keyframes logoPulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .topbar-badge{font-size:12px;font-weight:700;background:var(--red);color:#fff;padding:3px 9px;border-radius:20px;min-width:28px;text-align:center}
+  .topbar-badge.zero{background:var(--surface);color:var(--muted)}
+  #loginScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100dvh - 60px);padding:32px 24px;text-align:center}
+  .login-icon{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--red),#c0001a);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:32px;box-shadow:0 8px 32px rgba(255,26,46,.35)}
+  .login-title{font-size:26px;font-weight:800;margin-bottom:8px;background:linear-gradient(90deg,#fff 60%,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .login-sub{font-size:14px;color:var(--text2);margin-bottom:36px;line-height:1.6}
+  .pw-field{width:100%;max-width:320px;background:var(--surface);border:1.5px solid var(--border2);border-radius:14px;padding:15px 18px;font-size:17px;font-family:inherit;color:var(--text);text-align:center;letter-spacing:2px;outline:none;transition:border-color .2s;margin-bottom:16px}
+  .pw-field:focus{border-color:var(--cyan)}
+  .pw-field::placeholder{letter-spacing:0;color:var(--muted);font-size:14px}
+  .login-btn{width:100%;max-width:320px;background:var(--red);color:#fff;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:opacity .15s,transform .1s}
+  .login-btn:active{opacity:.8;transform:scale(.98)}
+  .login-err{font-size:13px;color:var(--red);margin-top:12px;min-height:20px}
+  #adminPanel{display:none}
+  .section-header{padding:20px 20px 10px;display:flex;align-items:center;justify-content:space-between}
+  .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2)}
+  .refresh-btn{background:none;border:1.5px solid var(--border2);border-radius:8px;padding:5px 12px;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .refresh-btn:active{border-color:var(--cyan);color:var(--cyan)}
+  .spin{animation:spin .6s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .empty-state{text-align:center;padding:60px 24px;color:var(--text2)}
+  .empty-icon{font-size:48px;margin-bottom:16px}
+  .empty-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
+  .empty-sub{font-size:13.5px;line-height:1.6}
+  .tips-list{padding:0 16px;display:flex;flex-direction:column;gap:12px}
+  .tip-card{background:var(--card);border:1.5px solid var(--border2);border-radius:18px;overflow:hidden;animation:cardIn .3s ease-out}
+  @keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .tip-card-top{padding:16px 18px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .tip-name{font-size:17px;font-weight:800;color:var(--text);margin-bottom:3px}
+  .tip-time{font-size:12px;color:var(--muted)}
+  .tip-amount-badge{background:rgba(0,200,255,.12);border:1.5px solid rgba(0,200,255,.25);border-radius:10px;padding:6px 14px;font-size:20px;font-weight:800;color:var(--cyan);white-space:nowrap;flex-shrink:0}
+  .tip-message{padding:0 18px 14px;font-size:14px;color:var(--text2);line-height:1.55;font-style:italic}
+  .tip-message:empty{display:none}
+  .tip-actions{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border)}
+  .tip-btn{border:none;background:none;padding:15px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+  .tip-btn:active{opacity:.75}
+  .tip-btn.approve{color:var(--green);border-right:1px solid var(--border)}
+  .tip-btn.approve:active{background:rgba(0,230,118,.08)}
+  .tip-btn.reject{color:var(--red)}
+  .tip-btn.reject:active{background:rgba(255,26,46,.08)}
+  .tip-btn:disabled{opacity:.4;pointer-events:none}
+  .tip-card.processing{opacity:.6;pointer-events:none}
+  .status-bar{position:fixed;bottom:calc(var(--safe-bot) + 12px);left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:8px 20px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:90vw}
+  .status-bar.show{opacity:1}
+  .status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .status-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green)}
+  .status-dot.err{background:var(--red);box-shadow:0 0 6px var(--red)}
+  .toast{position:fixed;top:calc(var(--safe-top) + 70px);left:50%;transform:translateX(-50%) translateY(-10px);background:var(--card);border:1.5px solid var(--border2);border-radius:14px;padding:12px 20px;font-size:14px;font-weight:600;color:var(--text);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;max-width:90vw;z-index:200}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.green{border-color:rgba(0,230,118,.35);color:var(--green)}
+  .toast.red{border-color:rgba(255,26,46,.35);color:var(--red)}
+  .logout-row{text-align:center;padding:32px 20px 8px}
+  .logout-btn{background:none;border:none;color:var(--muted);font-size:13px;font-family:inherit;cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-logo"><div class="logo-dot"></div>GameDay Admin</div>
+  <div class="topbar-badge zero" id="pendingBadge">0</div>
+</div>
+<div id="loginScreen">
+  <div class="login-icon">🔐</div>
+  <div class="login-title">Admin Access</div>
+  <p class="login-sub">Enter your GameDay admin password<br>to manage tip confirmations.</p>
+  <input class="pw-field" id="pwInput" type="password" placeholder="Enter admin password" autocomplete="current-password" autocorrect="off" autocapitalize="none">
+  <button class="login-btn" id="loginBtn">Unlock →</button>
+  <div class="login-err" id="loginErr"></div>
+</div>
+<div id="adminPanel">
+  <div class="section-header">
+    <span class="section-title">Pending Tips</span>
+    <button class="refresh-btn" id="refreshBtn"><span id="refreshIcon">↻</span> Refresh</button>
+  </div>
+  <div class="tips-list" id="tipsList"></div>
+  <div class="logout-row"><button class="logout-btn" id="logoutBtn">Sign out</button></div>
+</div>
+<div class="status-bar" id="statusBar"><div class="status-dot ok" id="statusDot"></div><span id="statusText">Connected</span></div>
+<div class="toast" id="toast"></div>
+<script>
+let _password=sessionStorage.getItem('gd_admin_pw')||'';
+let _pollTimer=null;
+function showToast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+type+' show';setTimeout(()=>{el.className='toast '+type;},2800)}
+function showStatus(msg,ok=true){const bar=document.getElementById('statusBar');const dot=document.getElementById('statusDot');const text=document.getElementById('statusText');dot.className='status-dot '+(ok?'ok':'err');text.textContent=msg;bar.classList.add('show');clearTimeout(bar._t);bar._t=setTimeout(()=>bar.classList.remove('show'),2500)}
+function timeAgo(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';return Math.floor(s/3600)+'h ago'}
+function formatINR(n){return '\\u20B9'+Number(n).toLocaleString('en-IN')}
+async function apiFetch(url,opts={}){const r=await fetch(url,{...opts,headers:{'Content-Type':'application/json','x-admin-password':_password,...(opts.headers||{})}});if(r.status===401)throw new Error('AUTH_FAIL');if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+async function tryLogin(){const pw=document.getElementById('pwInput').value.trim();const err=document.getElementById('loginErr');if(!pw){err.textContent='Enter your password first.';return}const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='Checking…';err.textContent='';try{_password=pw;await apiFetch('/api/admin/tips');sessionStorage.setItem('gd_admin_pw',pw);showAdminPanel()}catch(e){if(e.message==='AUTH_FAIL'){err.textContent='❌ Wrong password. Try again.'}else{err.textContent='⚠️ Could not connect. Check your internet.'}btn.disabled=false;btn.textContent='Unlock →'}}
+function showAdminPanel(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminPanel').style.display='block';loadTips();startAutoRefresh()}
+function logout(){_password='';sessionStorage.removeItem('gd_admin_pw');clearInterval(_pollTimer);document.getElementById('adminPanel').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('pwInput').value='';document.getElementById('loginErr').textContent='';document.getElementById('loginBtn').disabled=false;document.getElementById('loginBtn').textContent='Unlock →'}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+async function loadTips(showSpinner=false){const listEl=document.getElementById('tipsList');const icon=document.getElementById('refreshIcon');const badge=document.getElementById('pendingBadge');if(showSpinner)icon.className='spin';try{const data=await apiFetch('/api/admin/tips');icon.className='';const tips=data.tips||[];badge.textContent=tips.length;badge.className='topbar-badge'+(tips.length===0?' zero':'');if(tips.length===0){listEl.innerHTML='<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">All clear!</div><p class="empty-sub">No pending tips right now.<br>Auto-refreshes every 5 seconds.</p></div>';return}listEl.innerHTML=tips.map(t=>'<div class="tip-card" id="card-'+t.id+'"><div class="tip-card-top"><div><div class="tip-name">'+escHtml(t.name)+'</div><div class="tip-time">'+timeAgo(t.timestamp)+'</div></div><div class="tip-amount-badge">'+formatINR(t.amount)+'</div></div>'+(t.message?'<div class="tip-message">"'+escHtml(t.message)+'"</div>':'')+'<div class="tip-actions"><button class="tip-btn approve" onclick="approveTip(\''+t.id+'\')">✅ Approve</button><button class="tip-btn reject" onclick="rejectTip(\''+t.id+'\')">❌ Reject</button></div></div>').join('')}catch(e){icon.className='';if(e.message==='AUTH_FAIL'){logout();return}showStatus('Connection lost',false)}}
+async function approveTip(id){const card=document.getElementById('card-'+id);if(!card)return;card.classList.add('processing');try{const data=await apiFetch('/api/admin/approve/'+id,{method:'POST'});card.style.transition='opacity .4s,transform .4s';card.style.opacity='0';card.style.transform='scale(.95)';setTimeout(()=>{card.remove();loadTips();},420);const msg=data.alertsFired>0?'🔔 Alert fired! ('+data.alertsFired+' platform'+(data.alertsFired>1?'s':'')+'!)':'✅ Approved — no alert platform configured';showToast(msg,'green');showStatus('Approved',true)}catch(e){card.classList.remove('processing');if(e.message==='AUTH_FAIL'){logout();return}showToast('⚠️ Could not approve. Try again.','red');showStatus('Action failed',false)}}
+async function rejectTip(id){const card=document.getElementById('card-'+id);if(!card)return;const btns=card.querySelectorAll('.tip-btn');btns.forEach(b=>b.disabled=true);try{await apiFetch('/api/admin/reject/'+id,{method:'POST'});card.style.transition='opacity .4s,transform .4s';card.style.opacity='0';card.style.transform='scale(.95)';setTimeout(()=>{card.remove();loadTips();},420);showToast('❌ Tip rejected','red');showStatus('Rejected',true)}catch(e){btns.forEach(b=>b.disabled=false);if(e.message==='AUTH_FAIL'){logout();return}showToast('⚠️ Could not reject. Try again.','red');showStatus('Action failed',false)}}
+function startAutoRefresh(){clearInterval(_pollTimer);_pollTimer=setInterval(()=>loadTips(false),5000)}
+document.getElementById('loginBtn').addEventListener('click',tryLogin);
+document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
+document.getElementById('refreshBtn').addEventListener('click',()=>loadTips(true));
+document.getElementById('logoutBtn').addEventListener('click',logout);
+if(_password)showAdminPanel();
+</script>
+</body>
+</html>`;
+  res.send(adminHtml);
 });
 
 // ─── Alert helpers ─────────────────────────────────────────────────────────
