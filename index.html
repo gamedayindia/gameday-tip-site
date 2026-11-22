@@ -498,6 +498,53 @@ input,textarea{font-family:inherit}
 }
 .note-row svg{width:12px;height:12px;fill:var(--muted);flex-shrink:0}
 
+/* ── Waiting (pending confirmation) ───────── */
+.waiting{text-align:center;padding:20px 0 28px}
+.wait-spinner{
+  width:64px;height:64px;margin:0 auto 20px;
+  border-radius:50%;
+  border:3px solid var(--border2);
+  border-top-color:var(--cyan);
+  animation:spin .9s linear infinite;
+}
+.wait-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;font-weight:800;color:var(--text);margin-bottom:10px;
+}
+.wait-sub{font-size:13.5px;color:var(--text2);line-height:1.65;margin-bottom:22px}
+.wait-sub strong{color:var(--cyan)}
+.wait-steps{
+  display:flex;flex-direction:column;gap:10px;
+  text-align:left;margin-bottom:24px;
+}
+.wait-step{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:12px;
+  font-size:13px;color:var(--text2);
+}
+.wait-step.done{border-color:rgba(0,200,100,.3);background:rgba(0,200,100,.05);color:var(--text)}
+.wait-step.done .ws-icon{background:rgba(0,200,100,.2);color:#00C864}
+.wait-step.active .ws-icon{background:rgba(0,200,255,.12);color:var(--cyan)}
+.ws-icon{
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.wait-dots{display:flex;justify-content:center;gap:7px;margin-bottom:18px}
+.wdot{
+  width:8px;height:8px;border-radius:50%;background:var(--border2);
+  animation:wdotPulse 1.4s ease-in-out infinite;
+}
+.wdot:nth-child(2){animation-delay:.2s}
+.wdot:nth-child(3){animation-delay:.4s}
+@keyframes wdotPulse{0%,100%{background:var(--border2);transform:scale(1)}50%{background:var(--cyan);transform:scale(1.3)}}
+.wait-cancel{
+  background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px;
+  transition:color .15s;
+}
+.wait-cancel:hover{color:var(--text2)}
+
 /* ── Success ───────────────────────────────── */
 .success{text-align:center;padding:24px 0}
 .sico{font-size:52px;margin-bottom:16px;animation:popIn .45s cubic-bezier(.34,1.56,.64,1)}
@@ -776,6 +823,35 @@ footer strong{color:var(--text2);font-weight:500}
       </div>
     </div>
 
+    <!-- WAITING VIEW — shown after submit, until streamer approves -->
+    <div class="waiting" id="waitingView" hidden>
+      <div class="wait-spinner"></div>
+      <div class="wait-title">Waiting for Confirmation</div>
+      <p class="wait-sub">
+        Your tip of <strong id="waitAmt">₹0</strong> from <strong id="waitName" style="color:var(--text)">you</strong><br>
+        is waiting for GameDay to verify your payment.
+      </p>
+      <div class="wait-steps">
+        <div class="wait-step done">
+          <div class="ws-icon">✓</div>
+          <span>Payment sent via UPI</span>
+        </div>
+        <div class="wait-step active" id="wStepConfirm">
+          <div class="ws-icon" style="animation:spin .9s linear infinite;border:2px solid var(--cyan);border-top-color:transparent;border-radius:50%;width:30px;height:30px"></div>
+          <span>GameDay confirming your payment…</span>
+        </div>
+        <div class="wait-step" id="wStepAlert" style="opacity:.4">
+          <div class="ws-icon">🔔</div>
+          <span>Alert fires on stream</span>
+        </div>
+      </div>
+      <div class="wait-dots">
+        <div class="wdot"></div><div class="wdot"></div><div class="wdot"></div>
+      </div>
+      <p style="font-size:11.5px;color:var(--muted);margin-bottom:14px">This page updates automatically — don't close it</p>
+      <button class="wait-cancel" id="waitCancelBtn">Cancel and go back</button>
+    </div>
+
     <!-- SUCCESS VIEW -->
     <div class="success" id="successView" hidden>
       <div class="sico">🎉</div>
@@ -1003,53 +1079,10 @@ function checkForm() {
 document.getElementById('customAmt').addEventListener('input', checkForm);
 document.getElementById('donorName').addEventListener('input', checkForm);
 
-/* ── Submit (fire alert) ──────────────────────────────── */
-document.getElementById('payBtn').addEventListener('click', async () => {
-  const amount  = Number(document.getElementById('customAmt').value);
-  const name    = document.getElementById('donorName').value.trim().substring(0, 50);
-  const message = document.getElementById('donorMsg').value.trim().substring(0, 200);
-  const errEl   = document.getElementById('errMsg');
-
-  const btn = document.getElementById('payBtn');
-  btn.disabled = true;
-  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;animation:spin .8s linear infinite"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg> Sending alert…`;
-
-  try {
-    const res = await fetch('/confirm-tip', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, name, message })
-    });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      throw new Error(res.status === 404
-        ? 'Server not updated yet — please redeploy the latest server.js'
-        : `Server error ${res.status}. ${txt}`);
-    }
-
-    const data = await res.json();
-
-    // Show success screen
-    document.getElementById('sName').textContent = name;
-    document.getElementById('formView').hidden    = true;
-    document.getElementById('successView').hidden = false;
-
-    // Warn if no alert platform is configured
-    if (!data.configured) {
-      document.getElementById('alertWarn').hidden = false;
-    }
-
-  } catch(err) {
-    errEl.textContent = err.message || 'Something went wrong. Check your internet connection.';
-    btn.disabled = false;
-    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Tip — Send The Alert <span class="dim" id="amtPrev">₹${amount.toLocaleString('en-IN')}</span>`;
-  }
-});
-
-/* ── Reset ────────────────────────────────────────────── */
-document.getElementById('againBtn').addEventListener('click', () => {
+/* ── Helpers ──────────────────────────────────────────── */
+function resetTipForm() {
   document.getElementById('formView').hidden    = false;
+  document.getElementById('waitingView').hidden = true;
   document.getElementById('successView').hidden = true;
   document.getElementById('alertWarn').hidden   = true;
   document.getElementById('donorName').value    = '';
@@ -1060,7 +1093,114 @@ document.getElementById('againBtn').addEventListener('click', () => {
   const btn = document.getElementById('payBtn');
   btn.disabled = true;
   btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Tip — Send The Alert <span class="dim" id="amtPrev"></span>`;
+}
+
+/* ── Submit → creates PENDING tip, shows waiting screen ── */
+document.getElementById('payBtn').addEventListener('click', async () => {
+  const amount  = Number(document.getElementById('customAmt').value);
+  const name    = document.getElementById('donorName').value.trim().substring(0, 50);
+  const message = document.getElementById('donorMsg').value.trim().substring(0, 200);
+  const errEl   = document.getElementById('errMsg');
+  const btn     = document.getElementById('payBtn');
+
+  btn.disabled = true;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;animation:spin .8s linear infinite"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg> Submitting…`;
+
+  try {
+    const res = await fetch('/confirm-tip', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ amount, name, message }),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      throw new Error(`Server error ${res.status}. ${txt}`);
+    }
+
+    const data = await res.json();
+
+    // Switch to waiting view
+    document.getElementById('formView').hidden    = true;
+    document.getElementById('waitingView').hidden = false;
+    document.getElementById('waitAmt').textContent  = '₹' + amount.toLocaleString('en-IN');
+    document.getElementById('waitName').textContent = name;
+
+    // Start polling for approval
+    startPolling(data.tipId, name);
+
+  } catch(err) {
+    errEl.textContent = err.message || 'Something went wrong. Check your connection.';
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Tip — Send The Alert <span class="dim" id="amtPrev">₹${amount.toLocaleString('en-IN')}</span>`;
+  }
 });
+
+/* ── Poll /api/tip-status/:id every 3 seconds ─────────── */
+let _pollTimer = null;
+
+function startPolling(tipId, name) {
+  let attempts = 0;
+  const MAX    = 200;  // 200 × 3s = 10 minutes max wait
+
+  async function poll() {
+    attempts++;
+    if (attempts > MAX) {
+      // Timed out — go back to form with message
+      resetTipForm();
+      document.getElementById('errMsg').textContent =
+        'Confirmation timed out (10 min). Please try again or contact GameDay.';
+      return;
+    }
+    try {
+      const r = await fetch(`/api/tip-status/${tipId}`);
+      if (r.status === 404) {
+        // Tip expired on server (unlikely within 10 min, but handle it)
+        resetTipForm();
+        document.getElementById('errMsg').textContent =
+          'Your tip session expired. Please submit again.';
+        return;
+      }
+      const d = await r.json();
+
+      if (d.status === 'approved') {
+        // 🎉 Payment confirmed — show success
+        clearTimeout(_pollTimer);
+        document.getElementById('waitingView').hidden = true;
+        document.getElementById('successView').hidden = false;
+        document.getElementById('sName').textContent  = name;
+        return;
+      }
+
+      if (d.status === 'rejected') {
+        // ❌ Rejected — go back to form with explanation
+        clearTimeout(_pollTimer);
+        resetTipForm();
+        document.getElementById('errMsg').textContent =
+          '❌ Payment could not be verified. Please ensure you paid the correct amount and try again.';
+        return;
+      }
+
+      // Still pending — keep polling
+      _pollTimer = setTimeout(poll, 3000);
+
+    } catch(_) {
+      // Network blip — retry
+      _pollTimer = setTimeout(poll, 3000);
+    }
+  }
+
+  _pollTimer = setTimeout(poll, 3000);
+}
+
+/* ── Cancel waiting ───────────────────────────────────── */
+document.getElementById('waitCancelBtn').addEventListener('click', () => {
+  clearTimeout(_pollTimer);
+  resetTipForm();
+});
+
+/* ── Reset after success ──────────────────────────────── */
+document.getElementById('againBtn').addEventListener('click', resetTipForm);
 
 /* ── Fade-up on scroll ─────────────────────────────────── */
 if ('IntersectionObserver' in window) {
