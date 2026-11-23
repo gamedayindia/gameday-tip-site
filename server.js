@@ -72,8 +72,9 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/admin', (req, res) => {
-  // If password passed as query param, pre-authenticate and skip login screen
-  const preAuth = (req.query.pw === ADMIN_PASSWORD) ? 'true' : 'false';
+  // Server-side auth: inject password into page so no client-side fetch needed
+  const isAuth  = req.query.pw && req.query.pw === ADMIN_PASSWORD;
+  const safePw  = isAuth ? ADMIN_PASSWORD.replace(/\\/g,'\\\\').replace(/'/g,"\\'") : '';
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   const adminHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -169,7 +170,7 @@ app.get('/admin', (req, res) => {
 <div class="status-bar" id="statusBar"><div class="status-dot ok" id="statusDot"></div><span id="statusText">Connected</span></div>
 <div class="toast" id="toast"></div>
 <script>
-let _password=sessionStorage.getItem('gd_admin_pw')||'';
+let _password='${safePw}'||sessionStorage.getItem('gd_admin_pw')||'';
 let _pollTimer=null;
 function showToast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+type+' show';setTimeout(()=>{el.className='toast '+type;},2800)}
 function showStatus(msg,ok=true){const bar=document.getElementById('statusBar');const dot=document.getElementById('statusDot');const text=document.getElementById('statusText');dot.className='status-dot '+(ok?'ok':'err');text.textContent=msg;bar.classList.add('show');clearTimeout(bar._t);bar._t=setTimeout(()=>bar.classList.remove('show'),2500)}
@@ -188,9 +189,7 @@ document.getElementById('loginBtn').addEventListener('click',tryLogin);
 document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
 document.getElementById('refreshBtn').addEventListener('click',()=>loadTips(true));
 document.getElementById('logoutBtn').addEventListener('click',logout);
-// Server pre-authenticated via ?pw= query param
-if('${preAuth}'==='true'){_password=new URLSearchParams(location.search).get('pw');sessionStorage.setItem('gd_admin_pw',_password);showAdminPanel();}
-else if(_password){showAdminPanel();}
+if(_password){sessionStorage.setItem('gd_admin_pw',_password);showAdminPanel();}
 </script>
 </body>
 </html>`;
