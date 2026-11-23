@@ -208,7 +208,6 @@ app.get('/admin', (req, res) => {
   const msg     = req.query.msg || '';
   renderAdmin(res, { isAuth, wrongPw, msg });
 });
-});
 
 // ─── Alert helpers ─────────────────────────────────────────────────────────
 async function alertStreamElements({ donorName, amountINR, message }) {
