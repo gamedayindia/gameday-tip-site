@@ -71,47 +71,51 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/admin', (req, res) => {
-  const isAuth = !!(req.query.pw && req.query.pw === ADMIN_PASSWORD);
-  const pw     = isAuth ? req.query.pw : '';
-  const safePw = pw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+// helpers used by both GET /admin and the action routes
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtINR(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
+function agoStr(ts) {
+  const s = Math.floor((Date.now()-ts)/1000);
+  return s<60 ? s+'s ago' : s<3600 ? Math.floor(s/60)+'m ago' : Math.floor(s/3600)+'h ago';
+}
 
+function renderAdmin(res, { isAuth, wrongPw = false, msg = '' }) {
   const loginDisplay = isAuth ? 'none'  : 'flex';
   const panelDisplay = isAuth ? 'block' : 'none';
-  const wrongPw      = req.query.pw && !isAuth;
+  const pw           = isAuth ? escHtml(ADMIN_PASSWORD) : '';
 
-  // Server-render the tips list so it appears instantly, no fetch needed
-  function escHtml(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-  function fmtINR(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
-  function agoStr(ts) {
-    const s = Math.floor((Date.now()-ts)/1000);
-    return s<60 ? s+'s ago' : s<3600 ? Math.floor(s/60)+'m ago' : Math.floor(s/3600)+'h ago';
-  }
-
-  let initialTipsHtml = '';
-  let initialCount = 0;
+  let tipsHtml = '';
+  let count    = 0;
   if (isAuth) {
     const pending = [...tipQueue.values()]
       .filter(t => t.status === 'pending')
       .sort((a,b) => a.timestamp - b.timestamp);
-    initialCount = pending.length;
+    count = pending.length;
     if (pending.length === 0) {
-      initialTipsHtml = '<div class="empty"><div class="empty-ico">&#9989;</div><div class="empty-ttl">All clear!</div><p>No pending tips right now.<br>Auto-refreshes every 5 seconds.</p></div>';
+      tipsHtml = '<div class="empty"><div class="empty-ico">&#9989;</div><div class="empty-ttl">All clear!</div><p>No pending tips right now.</p></div>';
     } else {
-      initialTipsHtml = pending.map(t =>
-        `<div class="tip-card" id="c${escHtml(t.id)}">` +
+      tipsHtml = pending.map(t =>
+        `<div class="tip-card">` +
         `<div class="tip-top"><div><div class="tip-name">${escHtml(t.name)}</div><div class="tip-time">${agoStr(t.timestamp)}</div></div>` +
         `<div class="tip-amt">${fmtINR(t.amount)}</div></div>` +
         (t.message ? `<div class="tip-msg">&ldquo;${escHtml(t.message)}&rdquo;</div>` : '') +
         `<div class="tip-actions">` +
-        `<button class="tip-btn ok" onclick="approve('${escHtml(t.id)}')">&#9989; Approve</button>` +
-        `<button class="tip-btn no" onclick="reject('${escHtml(t.id)}')">&#10060; Reject</button>` +
+        `<form method="POST" action="/admin/approve/${escHtml(t.id)}?pw=${pw}" style="display:contents">` +
+        `<button type="submit" class="tip-btn ok">&#9989; Approve</button></form>` +
+        `<form method="POST" action="/admin/reject/${escHtml(t.id)}?pw=${pw}" style="display:contents">` +
+        `<button type="submit" class="tip-btn no">&#10060; Reject</button></form>` +
         `</div></div>`
       ).join('');
     }
   }
+
+  let msgBar = '';
+  if (msg === 'approved') msgBar = '<div class="msg-bar ok">&#9989; Tip approved — alert fired!</div>';
+  if (msg === 'approved0') msgBar = '<div class="msg-bar ok">&#9989; Tip approved (no alert platform configured)</div>';
+  if (msg === 'rejected')  msgBar = '<div class="msg-bar no">&#10060; Tip rejected</div>';
+  if (msg === 'notfound')  msgBar = '<div class="msg-bar no">&#9888;&#65039; Tip not found (may have expired)</div>';
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!DOCTYPE html>
@@ -131,7 +135,9 @@ body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .badge{font-size:12px;font-weight:700;background:var(--red);color:#fff;padding:3px 10px;border-radius:20px}
 .badge.zero{background:var(--surface);color:var(--muted)}
-/* Login */
+.msg-bar{padding:12px 20px;font-size:14px;font-weight:700;text-align:center}
+.msg-bar.ok{background:rgba(0,230,118,.12);color:var(--green);border-bottom:1px solid rgba(0,230,118,.2)}
+.msg-bar.no{background:rgba(255,26,46,.10);color:var(--red);border-bottom:1px solid rgba(255,26,46,.2)}
 .login-wrap{display:${loginDisplay};flex-direction:column;align-items:center;justify-content:center;min-height:calc(100dvh - 56px);padding:32px 24px;text-align:center}
 .login-icon{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--red),#c0001a);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:32px;box-shadow:0 8px 32px rgba(255,26,46,.35)}
 .login-title{font-size:26px;font-weight:800;margin-bottom:8px;background:linear-gradient(90deg,#fff 60%,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -142,12 +148,10 @@ body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color
 .unlock-btn{background:var(--red);color:#fff;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;width:100%}
 .unlock-btn:active{opacity:.8}
 .login-err{font-size:13px;color:var(--red);min-height:18px;text-align:center}
-/* Panel */
 .panel-wrap{display:${panelDisplay};flex-direction:column}
 .sec-header{padding:20px 20px 10px;display:flex;align-items:center;justify-content:space-between}
 .sec-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2)}
-.refresh-btn{background:none;border:1.5px solid var(--border2);border-radius:8px;padding:5px 12px;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer}
-.refresh-btn:active{border-color:var(--cyan);color:var(--cyan)}
+.refresh-link{background:none;border:1.5px solid var(--border2);border-radius:8px;padding:5px 12px;color:var(--text2);font-size:12px;font-family:inherit;text-decoration:none;display:inline-block}
 .tips-list{padding:0 16px;display:flex;flex-direction:column;gap:12px}
 .tip-card{background:var(--card);border:1.5px solid var(--border2);border-radius:18px;overflow:hidden}
 .tip-top{padding:16px 18px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -156,31 +160,27 @@ body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color
 .tip-amt{background:rgba(0,200,255,.12);border:1.5px solid rgba(0,200,255,.25);border-radius:10px;padding:6px 14px;font-size:20px;font-weight:800;color:var(--cyan);white-space:nowrap;flex-shrink:0}
 .tip-msg{padding:0 18px 12px;font-size:14px;color:var(--text2);font-style:italic}
 .tip-actions{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border)}
-.tip-btn{border:none;background:none;padding:16px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;width:100%}
+.tip-btn{border:none;background:none;padding:16px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;width:100%;display:block}
 .tip-btn.ok{color:var(--green);border-right:1px solid var(--border)}
 .tip-btn.no{color:var(--red)}
-.tip-btn:disabled{opacity:.4;pointer-events:none}
+.tip-btn:active{opacity:.7}
 .empty{text-align:center;padding:60px 24px;color:var(--text2)}
 .empty-ico{font-size:48px;margin-bottom:14px}
 .empty-ttl{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
 .signout{text-align:center;padding:28px 20px 8px}
-.signout a{color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer}
-.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-8px);background:var(--card);border:1.5px solid var(--border2);border-radius:14px;padding:12px 20px;font-size:14px;font-weight:600;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;z-index:200}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.g{border-color:rgba(0,230,118,.4);color:var(--green)}
-.toast.r{border-color:rgba(255,26,46,.4);color:var(--red)}
-@keyframes spin{to{transform:rotate(360deg)}}
+.signout a{color:var(--muted);font-size:13px;text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="topbar">
   <div class="logo"><div class="dot"></div>GameDay Admin</div>
-  <div class="badge${initialCount === 0 ? ' zero' : ''}" id="badge">${initialCount}</div>
+  <div class="badge${count === 0 ? ' zero' : ''}">${count}</div>
 </div>
 
-<!-- LOGIN — shown/hidden by server, plain HTML form, zero JS needed -->
+${msgBar}
+
 <div class="login-wrap">
-  <div class="login-icon">🔐</div>
+  <div class="login-icon">&#128272;</div>
   <div class="login-title">Admin Access</div>
   <p class="login-sub">Enter your GameDay admin password<br>to manage tip confirmations.</p>
   <form class="login-form" action="/admin" method="GET">
@@ -190,77 +190,24 @@ body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color
   <div class="login-err">${wrongPw ? '&#10060; Wrong password. Try again.' : ''}</div>
 </div>
 
-<!-- ADMIN PANEL — shown/hidden by server -->
-<div class="panel-wrap" id="panel">
+<div class="panel-wrap">
   <div class="sec-header">
     <span class="sec-title">Pending Tips</span>
-    <button class="refresh-btn" onclick="loadTips(true)">&#8635; Refresh</button>
+    <a class="refresh-link" href="/admin?pw=${pw}">&#8635; Refresh</a>
   </div>
-  <div class="tips-list" id="list">${initialTipsHtml}</div>
-  <div class="signout"><a onclick="location.href='/admin'">Sign out</a></div>
+  <div class="tips-list">${tipsHtml}</div>
+  <div class="signout"><a href="/admin">Sign out</a></div>
 </div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-var PW = '${safePw}';
-function toast(msg,cls){var el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+(cls||'');setTimeout(function(){el.className='toast';},2800);}
-function fmt(n){return '₹'+Number(n).toLocaleString('en-IN');}
-function ago(ts){var s=Math.floor((Date.now()-ts)/1000);return s<60?s+'s ago':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h ago';}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-async function api(url,opts){
-  var r=await fetch(url,Object.assign({headers:{'Content-Type':'application/json','x-admin-password':PW}},opts||{}));
-  if(!r.ok)throw new Error(r.status);
-  return r.json();
-}
-async function loadTips(spin){
-  var list=document.getElementById('list'),badge=document.getElementById('badge');
-  if(spin)list.innerHTML='<div class="empty"><div style="font-size:32px;animation:spin .8s linear infinite;display:inline-block">&#8635;</div></div>';
-  try{
-    var d=await api('/api/admin/tips');
-    var tips=d.tips||[];
-    badge.textContent=tips.length;
-    badge.className='badge'+(tips.length?'':' zero');
-    if(!tips.length){list.innerHTML='<div class="empty"><div class="empty-ico">&#9989;</div><div class="empty-ttl">All clear!</div><p>No pending tips. Auto-refreshes every 5s.</p></div>';return;}
-    list.innerHTML=tips.map(function(t){
-      return '<div class="tip-card" id="c'+t.id+'">'+
-        '<div class="tip-top"><div><div class="tip-name">'+esc(t.name)+'</div><div class="tip-time">'+ago(t.timestamp)+'</div></div>'+
-        '<div class="tip-amt">'+fmt(t.amount)+'</div></div>'+
-        (t.message?'<div class="tip-msg">&ldquo;'+esc(t.message)+'&rdquo;</div>':'')+
-        '<div class="tip-actions">'+
-        '<button class="tip-btn ok" onclick="approve(\''+t.id+'\')">&#9989; Approve</button>'+
-        '<button class="tip-btn no" onclick="reject(\''+t.id+'\')">&#10060; Reject</button>'+
-        '</div></div>';
-    }).join('');
-  }catch(e){list.innerHTML='<div class="empty"><p style="color:#FF1A2E">Could not load tips. Check connection.</p></div>';}
-}
-async function approve(id){
-  var card=document.getElementById('c'+id);if(!card)return;
-  card.style.opacity='.4';card.style.pointerEvents='none';
-  try{
-    var d=await api('/api/admin/approve/'+id,{method:'POST'});
-    toast(d.alertsFired>0?'&#128276; Alert fired!':'&#9989; Approved (no alert platform set)','g');
-    card.remove();loadTips(false);
-  }catch(e){toast('&#9888;&#65039; Could not approve','r');card.style.opacity='';card.style.pointerEvents='';}
-}
-async function reject(id){
-  var card=document.getElementById('c'+id);if(!card)return;
-  card.style.opacity='.4';card.style.pointerEvents='none';
-  try{
-    await api('/api/admin/reject/'+id,{method:'POST'});
-    toast('&#10060; Tip rejected','r');
-    card.remove();loadTips(false);
-  }catch(e){toast('&#9888;&#65039; Could not reject','r');card.style.opacity='';card.style.pointerEvents='';}
-}
-// Server tells JS whether we're authenticated — no CSS inspection needed
-var IS_AUTH = ${isAuth ? 'true' : 'false'};
-if(IS_AUTH){
-  loadTips(false);
-  setInterval(function(){loadTips(false);},5000);
-}
-</script>
 </body>
 </html>`);
+}
+
+app.get('/admin', (req, res) => {
+  const isAuth  = !!(req.query.pw && req.query.pw === ADMIN_PASSWORD);
+  const wrongPw = !!(req.query.pw && !isAuth);
+  const msg     = req.query.msg || '';
+  renderAdmin(res, { isAuth, wrongPw, msg });
+});
 });
 
 // ─── Alert helpers ─────────────────────────────────────────────────────────
@@ -310,6 +257,40 @@ async function alertStreamlabs({ donorName, amountINR, message }) {
     return false;
   }
 }
+
+// ─── POST /admin/approve/:id  &  POST /admin/reject/:id ───────────────────
+// Plain HTML form submissions from the admin panel — no JS needed.
+app.post('/admin/approve/:id', async (req, res) => {
+  const pw = req.query.pw || req.body?.pw || '';
+  if (!pw || pw !== ADMIN_PASSWORD) return res.status(401).send('Unauthorized');
+  const tip = tipQueue.get(req.params.id);
+  const redirect = `/admin?pw=${encodeURIComponent(ADMIN_PASSWORD)}`;
+  if (!tip || tip.status !== 'pending') {
+    return res.redirect(redirect + '&msg=notfound');
+  }
+  tip.status = 'processing';
+  const [seFired, slFired] = await Promise.all([
+    alertStreamElements({ donorName: tip.name, amountINR: tip.amount, message: tip.message }),
+    alertStreamlabs({ donorName: tip.name, amountINR: tip.amount, message: tip.message }),
+  ]);
+  tip.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
+  tip.status = 'approved';
+  console.log(`\n✅ Tip approved: ₹${tip.amount} from ${tip.name} — alerts fired: ${tip.alertsFired}`);
+  return res.redirect(redirect + (tip.alertsFired > 0 ? '&msg=approved' : '&msg=approved0'));
+});
+
+app.post('/admin/reject/:id', (req, res) => {
+  const pw = req.query.pw || req.body?.pw || '';
+  if (!pw || pw !== ADMIN_PASSWORD) return res.status(401).send('Unauthorized');
+  const tip = tipQueue.get(req.params.id);
+  const redirect = `/admin?pw=${encodeURIComponent(ADMIN_PASSWORD)}`;
+  if (!tip || tip.status !== 'pending') {
+    return res.redirect(redirect + '&msg=notfound');
+  }
+  tip.status = 'rejected';
+  console.log(`\n❌ Tip rejected: ₹${tip.amount} from ${tip.name}`);
+  return res.redirect(redirect + '&msg=rejected');
+});
 
 // ─── POST /confirm-tip ─────────────────────────────────────────────────────
 // Viewer submits → creates a PENDING tip, returns tipId for polling.
@@ -368,48 +349,26 @@ app.get('/api/admin/tips', requireAdmin, (_req, res) => {
   res.json({ tips: pending, total: tipQueue.size });
 });
 
-// ─── POST /api/admin/approve/:id ──────────────────────────────────────────
-// Streamer taps Approve → alerts fire immediately.
+// ─── POST /api/admin/approve/:id  (kept for backwards compat / future use) ──
 app.post('/api/admin/approve/:id', requireAdmin, async (req, res) => {
   const tip = tipQueue.get(req.params.id);
-  if (!tip)                    return res.status(404).json({ error: 'Tip not found' });
-  if (tip.status !== 'pending') return res.status(400).json({ error: 'Already processed' });
-
+  if (!tip || tip.status !== 'pending') return res.status(404).json({ error: 'Not found or already processed' });
   tip.status = 'processing';
-
   const [seFired, slFired] = await Promise.all([
     alertStreamElements({ donorName: tip.name, amountINR: tip.amount, message: tip.message }),
     alertStreamlabs    ({ donorName: tip.name, amountINR: tip.amount, message: tip.message }),
   ]);
-
   tip.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
-  tip.status      = 'approved';
-
-  const configured = (SE_JWT_TOKEN && SE_CHANNEL_ID) || STREAMLABS_ACCESS_TOKEN;
-  if (!configured) {
-    console.warn('⚠️  Approved but no alert platform configured — set env vars!');
-  }
-
-  console.log(`✅ Tip approved: ₹${tip.amount} from ${tip.name} — alerts fired: ${tip.alertsFired}`);
-
-  // Keep in queue for 5 more minutes so the viewer's poll can read 'approved'
+  tip.status = 'approved';
   setTimeout(() => tipQueue.delete(tip.id), 5 * 60 * 1000);
-
-  res.json({ ok: true, alertsFired: tip.alertsFired, configured: !!configured });
+  res.json({ ok: true, alertsFired: tip.alertsFired });
 });
 
-// ─── POST /api/admin/reject/:id ───────────────────────────────────────────
-// Streamer taps Reject → viewer sees a payment-failed message.
 app.post('/api/admin/reject/:id', requireAdmin, (req, res) => {
   const tip = tipQueue.get(req.params.id);
   if (!tip) return res.status(404).json({ error: 'Tip not found' });
-
   tip.status = 'rejected';
-  console.log(`❌ Tip rejected: ₹${tip.amount} from ${tip.name}`);
-
-  // Keep for 2 minutes so viewer's poll gets the rejected status
   setTimeout(() => tipQueue.delete(tip.id), 2 * 60 * 1000);
-
   res.json({ ok: true });
 });
 
