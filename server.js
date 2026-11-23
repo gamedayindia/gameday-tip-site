@@ -221,8 +221,9 @@ async function reject(id){
     card.remove();loadTips(false);
   }catch(e){toast('&#9888;&#65039; Could not reject','r');card.style.opacity='';card.style.pointerEvents='';}
 }
-// Only run if panel is visible (server already authenticated)
-if(document.getElementById('panel').style.display!=='none'){
+// Server tells JS whether we're authenticated — no CSS inspection needed
+var IS_AUTH = ${isAuth ? 'true' : 'false'};
+if(IS_AUTH){
   loadTips(false);
   setInterval(function(){loadTips(false);},5000);
 }
