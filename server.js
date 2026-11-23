@@ -74,13 +74,44 @@ app.get('/', (_req, res) => {
 app.get('/admin', (req, res) => {
   const isAuth = !!(req.query.pw && req.query.pw === ADMIN_PASSWORD);
   const pw     = isAuth ? req.query.pw : '';
-  // Escape pw for safe injection into JS string literal
   const safePw = pw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
-  // Visibility set by SERVER — no JS needed for login
   const loginDisplay = isAuth ? 'none'  : 'flex';
   const panelDisplay = isAuth ? 'block' : 'none';
   const wrongPw      = req.query.pw && !isAuth;
+
+  // Server-render the tips list so it appears instantly, no fetch needed
+  function escHtml(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtINR(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
+  function agoStr(ts) {
+    const s = Math.floor((Date.now()-ts)/1000);
+    return s<60 ? s+'s ago' : s<3600 ? Math.floor(s/60)+'m ago' : Math.floor(s/3600)+'h ago';
+  }
+
+  let initialTipsHtml = '';
+  let initialCount = 0;
+  if (isAuth) {
+    const pending = [...tipQueue.values()]
+      .filter(t => t.status === 'pending')
+      .sort((a,b) => a.timestamp - b.timestamp);
+    initialCount = pending.length;
+    if (pending.length === 0) {
+      initialTipsHtml = '<div class="empty"><div class="empty-ico">&#9989;</div><div class="empty-ttl">All clear!</div><p>No pending tips right now.<br>Auto-refreshes every 5 seconds.</p></div>';
+    } else {
+      initialTipsHtml = pending.map(t =>
+        `<div class="tip-card" id="c${escHtml(t.id)}">` +
+        `<div class="tip-top"><div><div class="tip-name">${escHtml(t.name)}</div><div class="tip-time">${agoStr(t.timestamp)}</div></div>` +
+        `<div class="tip-amt">${fmtINR(t.amount)}</div></div>` +
+        (t.message ? `<div class="tip-msg">&ldquo;${escHtml(t.message)}&rdquo;</div>` : '') +
+        `<div class="tip-actions">` +
+        `<button class="tip-btn ok" onclick="approve('${escHtml(t.id)}')">&#9989; Approve</button>` +
+        `<button class="tip-btn no" onclick="reject('${escHtml(t.id)}')">&#10060; Reject</button>` +
+        `</div></div>`
+      ).join('');
+    }
+  }
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!DOCTYPE html>
@@ -144,7 +175,7 @@ body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color
 <body>
 <div class="topbar">
   <div class="logo"><div class="dot"></div>GameDay Admin</div>
-  <div class="badge zero" id="badge">0</div>
+  <div class="badge${initialCount === 0 ? ' zero' : ''}" id="badge">${initialCount}</div>
 </div>
 
 <!-- LOGIN — shown/hidden by server, plain HTML form, zero JS needed -->
