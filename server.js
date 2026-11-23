@@ -196,7 +196,7 @@ body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color
     <span class="sec-title">Pending Tips</span>
     <button class="refresh-btn" onclick="loadTips(true)">&#8635; Refresh</button>
   </div>
-  <div class="tips-list" id="list"></div>
+  <div class="tips-list" id="list">${initialTipsHtml}</div>
   <div class="signout"><a onclick="location.href='/admin'">Sign out</a></div>
 </div>
 
