@@ -41,6 +41,11 @@ console.log('──────────────────────�
 // status: 'pending' | 'approved' | 'rejected'
 const tipQueue = new Map();
 
+// ─── Donation history (in-memory) ──────────────────────────────────────────
+// Approved tips only. Newest first. Capped at 100 entries.
+// { name, amount, message, timestamp }
+const donationHistory = [];
+
 function newTipId() {
   return crypto.randomBytes(8).toString('hex');
 }
@@ -274,6 +279,9 @@ app.post('/admin/approve/:id', async (req, res) => {
   ]);
   tip.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
   tip.status = 'approved';
+  // Record in donation history (newest first, max 100)
+  donationHistory.unshift({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
+  if (donationHistory.length > 100) donationHistory.pop();
   console.log(`\n✅ Tip approved: ₹${tip.amount} from ${tip.name} — alerts fired: ${tip.alertsFired}`);
   return res.redirect(redirect + (tip.alertsFired > 0 ? '&msg=approved' : '&msg=approved0'));
 });
@@ -359,6 +367,9 @@ app.post('/api/admin/approve/:id', requireAdmin, async (req, res) => {
   ]);
   tip.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
   tip.status = 'approved';
+  // Record in donation history (newest first, max 100)
+  donationHistory.unshift({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
+  if (donationHistory.length > 100) donationHistory.pop();
   setTimeout(() => tipQueue.delete(tip.id), 5 * 60 * 1000);
   res.json({ ok: true, alertsFired: tip.alertsFired });
 });
@@ -369,6 +380,26 @@ app.post('/api/admin/reject/:id', requireAdmin, (req, res) => {
   tip.status = 'rejected';
   setTimeout(() => tipQueue.delete(tip.id), 2 * 60 * 1000);
   res.json({ ok: true });
+});
+
+// ─── GET /api/donations ───────────────────────────────────────────────────
+// Public — viewer page polls this for the ticker + leaderboard.
+app.get('/api/donations', (_req, res) => {
+  // Top donors: sum amounts per unique name, sort desc, top 10
+  const totals = {};
+  for (const d of donationHistory) {
+    const key = d.name.toLowerCase();
+    totals[key] = totals[key] || { name: d.name, total: 0 };
+    totals[key].total += d.amount;
+  }
+  const topDonors = Object.values(totals)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 10);
+
+  res.json({
+    donations: donationHistory.slice(0, 50),  // most recent 50
+    topDonors,
+  });
 });
 
 // ─── GET /api/health ──────────────────────────────────────────────────────
