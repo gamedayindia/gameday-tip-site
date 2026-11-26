@@ -41,10 +41,35 @@ console.log('──────────────────────�
 // status: 'pending' | 'approved' | 'rejected'
 const tipQueue = new Map();
 
-// ─── Donation history (in-memory) ──────────────────────────────────────────
+// ─── Donation history ──────────────────────────────────────────────────────
 // Approved tips only. Newest first. Capped at 100 entries.
 // { name, amount, message, timestamp }
 const donationHistory = [];
+const DONATIONS_FILE = path.join(__dirname, 'donations.json');
+
+// Load saved donations from disk on startup
+try {
+  const saved = JSON.parse(fs.readFileSync(DONATIONS_FILE, 'utf8'));
+  if (Array.isArray(saved)) donationHistory.push(...saved);
+  console.log(`📂 Loaded ${donationHistory.length} donations from disk`);
+} catch (_) {
+  console.log('📂 No donations file yet — starting fresh');
+}
+
+function saveDonations() {
+  try {
+    fs.writeFileSync(DONATIONS_FILE, JSON.stringify(donationHistory));
+  } catch (err) {
+    console.error('⚠️  Could not save donations to disk:', err.message);
+  }
+}
+
+// ─── Pre-approved amounts (from iOS Shortcut) ──────────────────────────────
+// When a GPay/PhonePe notification fires BEFORE the viewer submits the form,
+// we store the payment amount here for 5 minutes.
+// When the form is submitted, we auto-approve instantly if the amount matches.
+// { amount: number, timestamp: number }
+const preApprovedAmounts = [];
 
 function newTipId() {
   return crypto.randomBytes(8).toString('hex');
@@ -282,6 +307,7 @@ app.post('/admin/approve/:id', async (req, res) => {
   // Record in donation history (newest first, max 100)
   donationHistory.unshift({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
   if (donationHistory.length > 100) donationHistory.pop();
+  saveDonations();
   console.log(`\n✅ Tip approved: ₹${tip.amount} from ${tip.name} — alerts fired: ${tip.alertsFired}`);
   return res.redirect(redirect + (tip.alertsFired > 0 ? '&msg=approved' : '&msg=approved0'));
 });
@@ -325,6 +351,29 @@ app.post('/confirm-tip', (req, res) => {
   });
 
   console.log(`\n⏳ Tip pending: ₹${amountINR} from ${donorName} [${tipId}]`);
+
+  // ── Auto-approve if GPay notification already arrived (pre-approved) ──────
+  const now = Date.now();
+  const preIdx = preApprovedAmounts.findIndex(
+    p => p.amount === amountINR && (now - p.timestamp) < 5 * 60 * 1000
+  );
+  if (preIdx >= 0) {
+    preApprovedAmounts.splice(preIdx, 1);
+    const tipRef = tipQueue.get(tipId);
+    tipRef.status = 'processing';
+    // Fire alerts async — viewer's poll loop will see 'approved' on next tick
+    Promise.all([
+      alertStreamElements({ donorName, amountINR, message: tipMsg }),
+      alertStreamlabs    ({ donorName, amountINR, message: tipMsg }),
+    ]).then(([seFired, slFired]) => {
+      tipRef.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
+      tipRef.status = 'approved';
+      donationHistory.unshift({ name: donorName, amount: amountINR, message: tipMsg, timestamp: tipRef.timestamp });
+      if (donationHistory.length > 100) donationHistory.pop();
+      saveDonations();
+      console.log(`\n🤖 Auto-approved via pre-auth: ₹${amountINR} from ${donorName}`);
+    });
+  }
 
   res.json({ ok: true, tipId, status: 'pending' });
 });
@@ -370,6 +419,7 @@ app.post('/api/admin/approve/:id', requireAdmin, async (req, res) => {
   // Record in donation history (newest first, max 100)
   donationHistory.unshift({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
   if (donationHistory.length > 100) donationHistory.pop();
+  saveDonations();
   setTimeout(() => tipQueue.delete(tip.id), 5 * 60 * 1000);
   res.json({ ok: true, alertsFired: tip.alertsFired });
 });
@@ -380,6 +430,80 @@ app.post('/api/admin/reject/:id', requireAdmin, (req, res) => {
   tip.status = 'rejected';
   setTimeout(() => tipQueue.delete(tip.id), 2 * 60 * 1000);
   res.json({ ok: true });
+});
+
+// ─── POST /api/auto-approve ───────────────────────────────────────────────
+// Called by the iOS Shortcut on your iPhone when GPay / PhonePe / Paytm
+// sends a payment-received notification.
+//
+// The shortcut POSTs the raw notification text; this endpoint:
+//   1. Parses the ₹ amount from the text
+//   2. Finds the oldest pending tip with that exact amount
+//   3. Fires the stream alerts and marks it approved
+//
+// If no matching tip is in the queue yet (notification arrived before the
+// viewer submitted the form), the amount is queued for 5 minutes and the
+// tip is auto-approved the moment the form is submitted.
+
+function extractAmountFromText(text) {
+  if (!text) return null;
+  // ₹500  |  ₹ 1,000  |  ₹500.00
+  let m = text.match(/₹\s*([\d,]+(?:\.\d{1,2})?)/);
+  if (!m) m = text.match(/(?:Rs\.?|INR)\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if (!m) return null;
+  return Math.round(parseFloat(m[1].replace(/,/g, '')));
+}
+
+app.post('/api/auto-approve', async (req, res) => {
+  const pw = req.query.pw || req.body?.pw || '';
+  if (!pw || pw !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Amount can come in as ?amount=500 or in the JSON body as { text: "...gpay msg..." }
+  let amount = null;
+  if (req.query.amount) {
+    amount = Math.round(Number(req.query.amount));
+  } else if (req.body?.amount) {
+    amount = Math.round(Number(req.body.amount));
+  } else if (req.body?.text) {
+    amount = extractAmountFromText(req.body.text);
+  }
+
+  if (!amount || amount < 1) {
+    console.log('⚠️  Auto-approve: could not determine amount from:', req.body?.text);
+    return res.status(400).json({ error: 'Could not determine amount', received: req.body?.text });
+  }
+
+  // Find oldest pending tip matching this amount
+  const pending = [...tipQueue.values()]
+    .filter(t => t.status === 'pending' && Math.round(t.amount) === amount)
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (pending.length > 0) {
+    const tip = pending[0];
+    tip.status = 'processing';
+    const [seFired, slFired] = await Promise.all([
+      alertStreamElements({ donorName: tip.name, amountINR: tip.amount, message: tip.message }),
+      alertStreamlabs    ({ donorName: tip.name, amountINR: tip.amount, message: tip.message }),
+    ]);
+    tip.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
+    tip.status = 'approved';
+    donationHistory.unshift({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
+    if (donationHistory.length > 100) donationHistory.pop();
+    saveDonations();
+    console.log(`\n🤖 Auto-approved ₹${tip.amount} from ${tip.name} — alerts: ${tip.alertsFired}`);
+    return res.json({ ok: true, approved: { name: tip.name, amount: tip.amount }, alertsFired: tip.alertsFired });
+  }
+
+  // No matching tip yet — GPay notification arrived before the viewer submitted
+  // the form. Queue the amount for 5 minutes.
+  const cutoff = Date.now() - 5 * 60 * 1000;
+  // Remove expired pre-approvals
+  for (let i = preApprovedAmounts.length - 1; i >= 0; i--) {
+    if (preApprovedAmounts[i].timestamp < cutoff) preApprovedAmounts.splice(i, 1);
+  }
+  preApprovedAmounts.push({ amount, timestamp: Date.now() });
+  console.log(`\n🕐 Pre-approved ₹${amount} — waiting up to 5 min for form submission`);
+  return res.json({ ok: true, queued: true, amount, message: 'No pending tip yet — amount queued for 5 minutes' });
 });
 
 // ─── GET /api/donations ───────────────────────────────────────────────────
