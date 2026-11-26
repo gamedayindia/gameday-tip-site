@@ -632,61 +632,137 @@ footer strong{color:var(--text2);font-weight:500}
    DONATION LEADERBOARD SECTION
 ═══════════════════════════════════════════ */
 .donors-sec{
-  padding:48px clamp(16px,4vw,40px) 40px;
+  padding:52px clamp(16px,4vw,40px) 48px;
   border-top:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(0,200,255,.03) 0%,transparent 60%);
 }
-.donors-sec .sec-head{margin-bottom:28px}
-.donors-tabs{
-  display:flex;gap:8px;margin-bottom:20px;
-}
+.donors-sec .sec-head{margin-bottom:32px}
+.donors-tabs{display:flex;gap:8px;margin-bottom:28px}
 .donors-tab{
-  padding:7px 18px;border-radius:20px;border:1.5px solid var(--border2);
+  padding:8px 20px;border-radius:20px;border:1.5px solid var(--border2);
   background:none;color:var(--text2);font-family:'Space Grotesk',sans-serif;
-  font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;
 }
-.donors-tab.on{background:var(--red);border-color:var(--red);color:#fff}
+.donors-tab.on{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 0 16px rgba(255,26,46,.35)}
 .donors-panel{display:none}
 .donors-panel.on{display:block}
 
-/* Leaderboard rows */
-.lb-list{display:flex;flex-direction:column;gap:10px}
-.lb-row{
-  display:grid;grid-template-columns:32px 1fr auto;
-  align-items:center;gap:12px;
-  padding:12px 16px;
-  background:var(--surface);border:1.5px solid var(--border);
-  border-radius:14px;transition:border-color .15s;
+/* ── Podium (top 3) ─────────────────────── */
+.lb-podium{
+  display:flex;align-items:flex-end;justify-content:center;
+  gap:12px;margin-bottom:28px;
 }
-.lb-row:hover{border-color:var(--border2)}
-.lb-rank{
-  font-size:13px;font-weight:800;color:var(--muted);text-align:center;
+.podium-item{
+  display:flex;flex-direction:column;align-items:center;
+  flex:1;max-width:140px;
 }
-.lb-rank.g1{color:#FFD700}
-.lb-rank.g2{color:#C0C0C0}
-.lb-rank.g3{color:#CD7F32}
-.lb-name{font-size:14px;font-weight:700;color:var(--text);truncate:ellipsis;overflow:hidden;white-space:nowrap}
-.lb-total{font-size:15px;font-weight:800;color:var(--cyan);white-space:nowrap}
+.podium-crown{font-size:22px;margin-bottom:4px;line-height:1}
+.podium-avatar{
+  width:54px;height:54px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;font-family:'Space Grotesk',sans-serif;
+  margin-bottom:8px;position:relative;
+}
+.podium-avatar.gold{
+  background:linear-gradient(135deg,#FFD700,#FFA500);
+  color:#1a0e00;
+  box-shadow:0 0 24px rgba(255,215,0,.5);
+}
+.podium-avatar.silver{
+  background:linear-gradient(135deg,#C0C0C0,#888);
+  color:#1a1a1a;
+  box-shadow:0 0 16px rgba(192,192,192,.3);
+}
+.podium-avatar.bronze{
+  background:linear-gradient(135deg,#CD7F32,#8B4513);
+  color:#fff;
+  box-shadow:0 0 16px rgba(205,127,50,.3);
+}
+.podium-name{
+  font-size:12px;font-weight:700;color:var(--text);
+  text-align:center;margin-bottom:4px;
+  max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.podium-amt{
+  font-size:13px;font-weight:800;
+  margin-bottom:10px;
+}
+.podium-item.gold .podium-amt{color:#FFD700}
+.podium-item.silver .podium-amt{color:#C0C0C0}
+.podium-item.bronze .podium-amt{color:#CD7F32}
+.podium-base{
+  width:100%;border-radius:12px 12px 0 0;
+  display:flex;align-items:center;justify-content:center;
+}
+.podium-item.gold   .podium-base{background:linear-gradient(180deg,rgba(255,215,0,.18),rgba(255,215,0,.06));border:1.5px solid rgba(255,215,0,.3);border-bottom:none}
+.podium-item.silver .podium-base{background:linear-gradient(180deg,rgba(192,192,192,.12),rgba(192,192,192,.04));border:1.5px solid rgba(192,192,192,.2);border-bottom:none}
+.podium-item.bronze .podium-base{background:linear-gradient(180deg,rgba(205,127,50,.12),rgba(205,127,50,.04));border:1.5px solid rgba(205,127,50,.2);border-bottom:none}
+.podium-rank{font-size:11px;font-weight:800;opacity:.5;letter-spacing:.05em}
 
-/* Recent donations list */
-.dl-list{display:flex;flex-direction:column;gap:8px}
-.dl-row{
-  display:grid;grid-template-columns:1fr auto;
-  gap:8px;align-items:center;
-  padding:11px 14px;
+/* ── Rest of leaderboard (4-10) ─────────── */
+.lb-rest{display:flex;flex-direction:column;gap:8px}
+.lb-rest-row{
+  display:grid;grid-template-columns:28px 36px 1fr auto;
+  align-items:center;gap:10px;
+  padding:10px 14px;
   background:var(--surface);border:1.5px solid var(--border);
   border-radius:12px;transition:border-color .15s;
 }
+.lb-rest-row:hover{border-color:var(--border2)}
+.lb-rest-rank{font-size:12px;font-weight:800;color:var(--muted);text-align:center}
+.lb-rest-av{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--card);border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;color:var(--text2);flex-shrink:0;
+}
+.lb-rest-info{min-width:0}
+.lb-rest-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.lb-bar-wrap{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.lb-bar{height:100%;background:linear-gradient(90deg,var(--cyan),rgba(0,200,255,.4));border-radius:2px;transition:width .6s ease}
+.lb-rest-amt{font-size:13px;font-weight:800;color:var(--cyan);white-space:nowrap}
+
+/* ── Single donor ───────────────────────── */
+.lb-solo{text-align:center;padding:32px 0}
+.lb-solo-wrap{position:relative;display:inline-block;margin-bottom:12px}
+.lb-solo-av{
+  width:72px;height:72px;border-radius:50%;margin:0 auto 4px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:800;
+}
+.lb-solo-av.gold{background:linear-gradient(135deg,#FFD700,#FFA500);color:#1a0e00;box-shadow:0 0 32px rgba(255,215,0,.4)}
+.lb-solo-crown{font-size:28px;margin-bottom:8px}
+.lb-solo-name{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px}
+.lb-solo-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+.lb-solo-amt{font-size:28px;font-weight:800;color:#FFD700}
+
+/* ── Recent donations ───────────────────── */
+.dl-list{display:flex;flex-direction:column;gap:8px}
+.dl-row{
+  display:grid;grid-template-columns:40px 1fr auto;
+  gap:12px;align-items:center;
+  padding:12px 14px;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:14px;transition:border-color .15s;
+}
 .dl-row:hover{border-color:var(--border2)}
+.dl-av{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(0,200,255,.05));
+  border:1.5px solid rgba(0,200,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:var(--cyan);
+}
 .dl-info{min-width:0}
 .dl-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dl-time{font-size:11px;color:var(--muted);margin-top:2px}
-.dl-amt{font-size:14px;font-weight:800;color:var(--cyan);white-space:nowrap}
+.dl-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.dl-amt{font-size:15px;font-weight:800;color:var(--cyan);white-space:nowrap}
 
 .donors-empty{
-  text-align:center;padding:40px 16px;
-  color:var(--muted);font-size:13px;
+  text-align:center;padding:48px 16px;
+  color:var(--muted);font-size:13px;line-height:1.7;
 }
-.donors-empty span{font-size:32px;display:block;margin-bottom:12px}
+.donors-empty span{font-size:40px;display:block;margin-bottom:14px}
 </style>
 </head>
 <body>
@@ -1057,15 +1133,15 @@ footer strong{color:var(--text2);font-weight:500}
 
   <!-- LEADERBOARD PANEL -->
   <div class="donors-panel on" id="donorPanelLeaders">
-    <div class="lb-list" id="lbList">
-      <div class="donors-empty"><span>🎮</span>No donations yet — be the first!</div>
+    <div id="lbList">
+      <div class="donors-empty"><span>🎮</span>No donations yet.<br>Be the first to support the stream!</div>
     </div>
   </div>
 
   <!-- RECENT DONATIONS PANEL -->
   <div class="donors-panel" id="donorPanelRecent">
     <div class="dl-list" id="dlList">
-      <div class="donors-empty"><span>💸</span>No donations yet — be the first!</div>
+      <div class="donors-empty"><span>💸</span>No donations yet.<br>Be the first to support the stream!</div>
     </div>
   </div>
 </section>
@@ -1389,41 +1465,98 @@ function renderTicker(topDonors) {
   track.style.animation = '';
 }
 
+function initials(name) {
+  return String(name||'?').trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2) || '?';
+}
+
 function renderLeaderboard(topDonors) {
   const el = document.getElementById('lbList');
   if (!el) return;
   if (!topDonors || topDonors.length === 0) {
-    el.innerHTML = '<div class="donors-empty"><span>🎮</span>No donations yet — be the first!</div>';
+    el.innerHTML = '<div class="donors-empty"><span>🎮</span>No donations yet.<br>Be the first to support the stream!</div>';
     return;
   }
-  el.innerHTML = topDonors.map((d, i) => {
-    const rank = i + 1;
-    const cls  = rank===1?'g1':rank===2?'g2':rank===3?'g3':'';
-    const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
-    return `<div class="lb-row">` +
-      `<div class="lb-rank ${cls}">${medal}</div>` +
-      `<div class="lb-name">${escText(d.name)}</div>` +
-      `<div class="lb-total">${fmtINR(d.total)}</div>` +
-      `</div>`;
-  }).join('');
+
+  const maxTotal = topDonors[0].total;
+  let html = '';
+
+  if (topDonors.length === 1) {
+    // Solo top donor
+    const d = topDonors[0];
+    html = `<div class="lb-solo">
+      <div class="lb-solo-crown">👑</div>
+      <div class="lb-solo-av gold">${escText(initials(d.name))}</div>
+      <div class="lb-solo-name">${escText(d.name)}</div>
+      <div class="lb-solo-sub">Top donor · All time</div>
+      <div class="lb-solo-amt">${fmtINR(d.total)}</div>
+    </div>`;
+  } else {
+    // Podium for top 3 — display order: 2nd (left), 1st (centre), 3rd (right)
+    const podiumSlots = [
+      { idx:1, cls:'silver', crown:'🥈', h:72 },
+      { idx:0, cls:'gold',   crown:'👑', h:100 },
+      { idx:2, cls:'bronze', crown:'🥉', h:52 },
+    ];
+    html += '<div class="lb-podium">';
+    for (const s of podiumSlots) {
+      const d = topDonors[s.idx];
+      if (!d) continue;
+      html += `<div class="podium-item ${s.cls}">
+        <div class="podium-crown">${s.crown}</div>
+        <div class="podium-avatar ${s.cls}">${escText(initials(d.name))}</div>
+        <div class="podium-name">${escText(d.name)}</div>
+        <div class="podium-amt">${fmtINR(d.total)}</div>
+        <div class="podium-base" style="height:${s.h}px"><span class="podium-rank">#${s.idx+1}</span></div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  // Ranks 4–10 with progress bars
+  if (topDonors.length > 3) {
+    html += '<div class="lb-rest">';
+    topDonors.slice(3).forEach((d, i) => {
+      const pct = Math.round((d.total / maxTotal) * 100);
+      html += `<div class="lb-rest-row">
+        <div class="lb-rest-rank">${i+4}</div>
+        <div class="lb-rest-av">${escText(initials(d.name))}</div>
+        <div class="lb-rest-info">
+          <div class="lb-rest-name">${escText(d.name)}</div>
+          <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%"></div></div>
+        </div>
+        <div class="lb-rest-amt">${fmtINR(d.total)}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
 }
 
 function renderRecent(donations) {
   const el = document.getElementById('dlList');
   if (!el) return;
   if (!donations || donations.length === 0) {
-    el.innerHTML = '<div class="donors-empty"><span>💸</span>No donations yet — be the first!</div>';
+    el.innerHTML = '<div class="donors-empty"><span>💸</span>No donations yet.<br>Be the first to support the stream!</div>';
     return;
   }
-  el.innerHTML = donations.map(d =>
-    `<div class="dl-row">` +
-    `<div class="dl-info">` +
-    `<div class="dl-name">${escText(d.name)}</div>` +
-    `<div class="dl-time">${fmtDate(d.timestamp)}</div>` +
-    `</div>` +
-    `<div class="dl-amt">${fmtINR(d.amount)}</div>` +
-    `</div>`
-  ).join('');
+  el.innerHTML = donations.map(d => {
+    const ago = (() => {
+      const s = Math.floor((Date.now() - d.timestamp) / 1000);
+      if (s < 60)   return s + 's ago';
+      if (s < 3600) return Math.floor(s/60) + 'm ago';
+      if (s < 86400)return Math.floor(s/3600) + 'h ago';
+      return fmtDate(d.timestamp);
+    })();
+    return `<div class="dl-row">
+      <div class="dl-av">${escText(initials(d.name))}</div>
+      <div class="dl-info">
+        <div class="dl-name">${escText(d.name)}</div>
+        <div class="dl-meta">${ago}${d.message ? ' · <em style="color:var(--text2)">' + escText(d.message.slice(0,40)) + '</em>' : ''}</div>
+      </div>
+      <div class="dl-amt">${fmtINR(d.amount)}</div>
+    </div>`;
+  }).join('');
 }
 
 function escText(s) {
