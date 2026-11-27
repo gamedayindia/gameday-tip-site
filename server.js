@@ -12,11 +12,12 @@
  */
 
 require('dotenv').config();
-const express = require('express');
-const axios   = require('axios');
-const path    = require('path');
-const fs      = require('fs');
-const crypto  = require('crypto');
+const express     = require('express');
+const axios       = require('axios');
+const path        = require('path');
+const fs          = require('fs');
+const crypto      = require('crypto');
+const { MongoClient } = require('mongodb');
 
 const app = express();
 
@@ -26,6 +27,7 @@ const {
   SE_JWT_TOKEN,
   STREAMLABS_ACCESS_TOKEN,
   ADMIN_PASSWORD = 'gameday2024',   // ← change this in Render env vars!
+  MONGODB_URI,
   PORT = 3000,
 } = process.env;
 
@@ -42,27 +44,70 @@ console.log('──────────────────────�
 const tipQueue = new Map();
 
 // ─── Donation history ──────────────────────────────────────────────────────
-// Approved tips only. Newest first. Capped at 100 entries.
+// In-memory cache (fast reads). MongoDB is the source of truth.
 // { name, amount, message, timestamp }
 const donationHistory = [];
-const DONATIONS_FILE = path.join(__dirname, 'donations.json');
+const DONATIONS_FILE  = path.join(__dirname, 'donations.json'); // file fallback
 
-// Load saved donations from disk on startup
-try {
-  const saved = JSON.parse(fs.readFileSync(DONATIONS_FILE, 'utf8'));
-  if (Array.isArray(saved)) donationHistory.push(...saved);
-  console.log(`📂 Loaded ${donationHistory.length} donations from disk`);
-} catch (_) {
-  console.log('📂 No donations file yet — starting fresh');
-}
+// ─── MongoDB ───────────────────────────────────────────────────────────────
+let _db = null; // set once connected
 
-function saveDonations() {
+async function connectDB() {
+  if (!MONGODB_URI) {
+    console.log('⚠️  MONGODB_URI not set — using file fallback');
+    loadFromFile();
+    return;
+  }
   try {
-    fs.writeFileSync(DONATIONS_FILE, JSON.stringify(donationHistory));
+    const client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 8000 });
+    await client.connect();
+    _db = client.db('gameday');
+    console.log('✅ MongoDB connected');
+    // Load most recent 100 donations into memory
+    const saved = await _db.collection('donations')
+      .find({}, { projection: { _id: 0 } })
+      .sort({ timestamp: -1 })
+      .limit(100)
+      .toArray();
+    donationHistory.push(...saved);
+    console.log(`📂 Loaded ${donationHistory.length} donations from MongoDB`);
   } catch (err) {
-    console.error('⚠️  Could not save donations to disk:', err.message);
+    console.error('❌ MongoDB failed:', err.message, '— falling back to file');
+    loadFromFile();
   }
 }
+
+function loadFromFile() {
+  try {
+    const saved = JSON.parse(fs.readFileSync(DONATIONS_FILE, 'utf8'));
+    if (Array.isArray(saved)) donationHistory.push(...saved);
+    console.log(`📂 Loaded ${donationHistory.length} donations from file`);
+  } catch (_) {
+    console.log('📂 No donations file — starting fresh');
+  }
+}
+
+function saveToFile() {
+  try { fs.writeFileSync(DONATIONS_FILE, JSON.stringify(donationHistory)); }
+  catch (_) {}
+}
+
+// Record a new approved donation — write to Mongo (or file fallback)
+async function recordDonation({ name, amount, message, timestamp }) {
+  const doc = { name, amount, message, timestamp };
+  donationHistory.unshift(doc);
+  if (donationHistory.length > 100) donationHistory.pop();
+
+  if (_db) {
+    try { await _db.collection('donations').insertOne({ ...doc }); }
+    catch (err) { console.error('⚠️  Mongo write error:', err.message); saveToFile(); }
+  } else {
+    saveToFile();
+  }
+}
+
+// Keep old saveDonations() name so nothing else breaks
+function saveDonations() { saveToFile(); }
 
 // ─── Pre-approved amounts (from iOS Shortcut) ──────────────────────────────
 // When a GPay/PhonePe notification fires BEFORE the viewer submits the form,
@@ -304,10 +349,7 @@ app.post('/admin/approve/:id', async (req, res) => {
   ]);
   tip.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
   tip.status = 'approved';
-  // Record in donation history (newest first, max 100)
-  donationHistory.unshift({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
-  if (donationHistory.length > 100) donationHistory.pop();
-  saveDonations();
+  await recordDonation({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
   console.log(`\n✅ Tip approved: ₹${tip.amount} from ${tip.name} — alerts fired: ${tip.alertsFired}`);
   return res.redirect(redirect + (tip.alertsFired > 0 ? '&msg=approved' : '&msg=approved0'));
 });
@@ -368,9 +410,7 @@ app.post('/confirm-tip', (req, res) => {
     ]).then(([seFired, slFired]) => {
       tipRef.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
       tipRef.status = 'approved';
-      donationHistory.unshift({ name: donorName, amount: amountINR, message: tipMsg, timestamp: tipRef.timestamp });
-      if (donationHistory.length > 100) donationHistory.pop();
-      saveDonations();
+      recordDonation({ name: donorName, amount: amountINR, message: tipMsg, timestamp: tipRef.timestamp });
       console.log(`\n🤖 Auto-approved via pre-auth: ₹${amountINR} from ${donorName}`);
     });
   }
@@ -416,10 +456,7 @@ app.post('/api/admin/approve/:id', requireAdmin, async (req, res) => {
   ]);
   tip.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
   tip.status = 'approved';
-  // Record in donation history (newest first, max 100)
-  donationHistory.unshift({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
-  if (donationHistory.length > 100) donationHistory.pop();
-  saveDonations();
+  await recordDonation({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
   setTimeout(() => tipQueue.delete(tip.id), 5 * 60 * 1000);
   res.json({ ok: true, alertsFired: tip.alertsFired });
 });
@@ -487,9 +524,7 @@ app.post('/api/auto-approve', async (req, res) => {
     ]);
     tip.alertsFired = (seFired ? 1 : 0) + (slFired ? 1 : 0);
     tip.status = 'approved';
-    donationHistory.unshift({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
-    if (donationHistory.length > 100) donationHistory.pop();
-    saveDonations();
+    await recordDonation({ name: tip.name, amount: tip.amount, message: tip.message, timestamp: tip.timestamp });
     console.log(`\n🤖 Auto-approved ₹${tip.amount} from ${tip.name} — alerts: ${tip.alertsFired}`);
     return res.json({ ok: true, approved: { name: tip.name, amount: tip.amount }, alertsFired: tip.alertsFired });
   }
@@ -574,7 +609,9 @@ app.get('/api/latest-videos', async (_req, res) => {
 });
 
 // ─── Start ─────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
-  console.log(`   Admin panel   : http://localhost:${PORT}/admin\n`);
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running at http://localhost:${PORT}`);
+    console.log(`   Admin panel   : http://localhost:${PORT}/admin\n`);
+  });
 });
